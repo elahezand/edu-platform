@@ -28,6 +28,12 @@ const schema = new mongoose.Schema(
       trim: true,
     },
 
+    course: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Course",
+      required: true
+    },
+
     answers: [
       {
         text: {

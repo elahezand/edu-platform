@@ -17,9 +17,7 @@ const cookieOptions = {
   secure: process.env.NODE_ENV === "production"
 };
 
-// =========================
 // SIGNUP
-// =========================
 exports.signup = async (req, res, next) => {
   try {
     const parsed = userValidationSchema.safeParse(req.body);
@@ -85,15 +83,11 @@ exports.signup = async (req, res, next) => {
     next(err);
   }
 };
-
-// =========================
 // SIGNIN
-// =========================
 const signinSchema = z.object({
   identifier: z.string(),
   password: z.string().min(6)
 });
-
 exports.signin = async (req, res, next) => {
   try {
     const parsed = signinSchema.safeParse(req.body);
@@ -153,10 +147,7 @@ exports.signin = async (req, res, next) => {
     next(err);
   }
 };
-
-// =========================
 // GET ME
-// =========================
 exports.getMe = async (req, res, next) => {
   try {
     if (!req.user)
@@ -178,10 +169,7 @@ exports.getMe = async (req, res, next) => {
     next(err);
   }
 };
-
-// =========================
 // LOGOUT
-// =========================
 exports.logout = async (req, res, next) => {
   try {
     if (req.user) {
@@ -200,10 +188,7 @@ exports.logout = async (req, res, next) => {
     next(err);
   }
 };
-
-// =========================
 // REFRESH TOKEN
-// =========================
 exports.refreshToken = async (req, res, next) => {
   try {
     const { refreshToken } = req.cookies;
