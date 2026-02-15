@@ -4,7 +4,6 @@ const { isValidObjectId } = require("mongoose");
 const UserModel = require("../models/user");
 const BanModel = require("../models/ban");
 const { handleFileUpload } = require("../utils/serverFile")
-
 const { paginate } = require("../utils/helper");
 
 const {
@@ -20,9 +19,7 @@ const cookieOptions = {
     secure: process.env.NODE_ENV === "production"
 };
 
-// =========================
 // Get Users (Admin)
-// =========================
 exports.get = async (req, res, next) => {
     try {
         if (!req.admin)
@@ -49,10 +46,7 @@ exports.get = async (req, res, next) => {
         next(err);
     }
 };
-
-// =========================
 // Create User (Admin)
-// =========================
 exports.post = async (req, res, next) => {
     try {
         if (!req.admin)
@@ -124,10 +118,7 @@ exports.post = async (req, res, next) => {
         next(err);
     }
 };
-
-// =========================
 // Edit User (Admin)
-// =========================
 exports.edit = async (req, res, next) => {
     try {
         if (!req.user)
@@ -135,7 +126,7 @@ exports.edit = async (req, res, next) => {
 
         const { id } = req.params;
         if (!isValidObjectId(id))
-            return next({ status: 422, message: "Invalid ID" });
+            return next({ status: 409, message: "Invalid ID" });
 
         const formData = await req.formData()
         const body = Object.fromEntries(formData.entries());
@@ -161,9 +152,11 @@ exports.edit = async (req, res, next) => {
         let hashedPassword = user.password
         if (newPassword) hashedPassword = await hashPassword(newPassword)
 
-        const avatar = await handleFileUpload(formData.get("avatar")) || "";
-
-        await UserModel.findByIdAndUpdate(id, {
+        const avatar = req.file
+            ? `/users/avatars/${req.file.filename}`
+            : user.avatar;
+      
+            await UserModel.findByIdAndUpdate(id, {
             $set: {
                 ...parsed.data,
                 avatar,
@@ -175,18 +168,15 @@ exports.edit = async (req, res, next) => {
         next(err);
     }
 };
-
-// =========================
 // Delete User (Admin)
-// =========================
-exports.deleteUser = async (req, res, next) => {
+exports.remove = async (req, res, next) => {
     try {
         if (!req.admin)
             return next({ status: 403, message: "Forbidden" });
 
         const { id } = req.params;
         if (!isValidObjectId(id))
-            return next({ status: 422, message: "Invalid ID" });
+            return next({ status: 409, message: "Invalid ID" });
 
         await UserModel.findByIdAndDelete(id);
 
@@ -198,10 +188,7 @@ exports.deleteUser = async (req, res, next) => {
         next(err);
     }
 };
-
-// =========================
 // Ban User (Admin)
-// =========================
 exports.ban = async (req, res, next) => {
     try {
         if (!req.admin)
@@ -226,10 +213,7 @@ exports.ban = async (req, res, next) => {
         next(err);
     }
 };
-
-// =========================
 // Toggle Role (Admin)
-// =========================
 exports.role = async (req, res, next) => {
     try {
         if (!req.admin)
