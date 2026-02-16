@@ -12,7 +12,7 @@ const { paginate } = require("../utils/helper");
 /* ==============================
    Get All Courses
 ============================== */
-exports.get = async (req, res, next) => {
+exports.getAll = async (req, res, next) => {
   try {
     const { searchParams } = new URL(
       req.protocol + "://" + req.get("host") + req.originalUrl
@@ -82,31 +82,6 @@ exports.getOne = async (req, res, next) => {
     next(err);
   }
 };
-
-/* ==============================
-   Get Courses By Category
-============================== */
-exports.getCategoryCourses = async (req, res, next) => {
-  try {
-    const { categoryName } = req.params;
-    const category = await categoryModel.findOne({ name: categoryName });
-
-    if (!category)
-      return res.json([]);
-
-    const categoryCourses = await courseModel
-      .find({ categoryID: category._id })
-      .populate("creator")
-      .populate("categoryID")
-      .lean();
-
-    res.json(categoryCourses);
-
-  } catch (error) {
-    next(error);
-  }
-};
-
 /* ==============================
    Create Course
 ============================== */
@@ -186,6 +161,31 @@ exports.remove = async (req, res, next) => {
 
   } catch (err) {
     next(err);
+  }
+};
+
+
+/* ==============================
+   Get Courses By Category
+============================== */
+exports.getCategoryCourses = async (req, res, next) => {
+  try {
+    const { categoryName } = req.params;
+    const category = await categoryModel.findOne({ name: categoryName });
+
+    if (!category)
+      return res.json([]);
+
+    const categoryCourses = await courseModel
+      .find({ categoryID: category._id })
+      .populate("creator")
+      .populate("categoryID")
+      .lean();
+
+    res.json(categoryCourses);
+
+  } catch (error) {
+    next(error);
   }
 };
 

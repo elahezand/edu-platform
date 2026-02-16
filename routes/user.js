@@ -1,23 +1,23 @@
 const express = require("express");
-const router = express.Router();
+const userRouter = express.Router();
 const {
   get,
   post,
-  edit,
+  put,
   remove,
   ban,
-  role
+  toggleRole
 } = require("../controllers/user");
 
 const { authAdmin, authUser } = require("../middlewares/authMiddleware");
 const upload = require("../middlewares/multer");
 
 
-router.get("/", authAdmin, get);
-router.post("/", authAdmin, post);
-router.put("/:id", authUser, upload.single("avatar"), edit);
-router.delete("/:id", authAdmin, remove);
-router.post("/ban", authAdmin, ban);
-router.patch("/role/:id", authAdmin, role);
+userRouter.get("/", authAdmin, get);
+userRouter.post("/", authAdmin, post);
+userRouter.put("/:id", authUser, upload.single("avatar"), put);
+userRouter.delete("/:id", authAdmin, remove);
+userRouter.post("/ban", authAdmin, ban);
+userRouter.patch("/role/:id", authAdmin, toggleRole);
 
-module.exports = router;
+module.exports = userRouter;
