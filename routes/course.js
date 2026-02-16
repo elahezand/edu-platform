@@ -7,7 +7,7 @@ const { authAdmin, authUser } = require("../middlewares/authMiddleware");
 // ==============================
 // Public Routes
 // ==============================
-courseRouter.get("/", controller.get);
+courseRouter.get("/", controller.getAll);
 courseRouter.get("/category/:categoryName", controller.getCategoryCourses);
 courseRouter.get("/related/:shortName", controller.getRelated);
 courseRouter.get("/:id", controller.getOne);

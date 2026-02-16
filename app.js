@@ -13,6 +13,13 @@ const courseRouter = require("./routes/course");
 const commentRouter = require("./routes/comment");
 const articleRouter = require("./routes/article");
 const contactRouter = require("./routes/contact")
+const departmentRouter = require("./routes/department");
+const infoRouter = require("./routes/info");
+const menuRouter = require("./routes/menu");
+const newsLetterRouter = require("./routes/newsletter");
+const notificationRouter = require("./routes/notification");
+const offRouter = require("./routes/off");
+
 
 const app = express();
 
@@ -36,6 +43,17 @@ app.use("/courses", courseRouter);
 app.use("/comments", commentRouter);
 app.use("/articles",articleRouter );
 app.use("/contact",contactRouter );
+app.use("/api/departments", departmentRouter);
+app.use("/api/info", infoRouter);
+app.use("/api/menu", menuRouter);
+app.use("/api/newsletter",newsLetterRouter)
+app.use("/api/notification",notificationRouter)
+app.use("/api/off",offRouter)
+
+
+
+
+
 
 
 
