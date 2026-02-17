@@ -11,14 +11,12 @@ const cookieOptions = {
     secure: process.env.NODE_ENV === "production"
 };
 
-/* =============================
-   Get Users (Admin)
-============================= */
+/*  Get Users (Admin)*/
 exports.get = async (req, res, next) => {
     try {
         if (!req.admin) return next({ status: 403, message: "Forbidden" });
 
-        const { searchParams } = new URL(req.protocol + "://" + req.get("host") + req.originalUrl);
+        const searchParams = req.query;
         const useCursor = searchParams.has("cursor");
 
         const result = await paginate(UserModel, searchParams, {}, "comments", useCursor, true);
@@ -29,9 +27,7 @@ exports.get = async (req, res, next) => {
     }
 };
 
-/* =============================
-   Create User (Admin)
-============================= */
+/* Create User (Admin)*/
 exports.post = async (req, res, next) => {
     try {
         if (!req.admin) return next({ status: 403, message: "Forbidden" });
@@ -83,9 +79,7 @@ exports.post = async (req, res, next) => {
     }
 };
 
-/* =============================
-   Update User (Admin/User)
-============================= */
+/* Update User (Admin/User)*/
 exports.put = async (req, res, next) => {
     try {
         const parsedId = userIdParamSchema.safeParse(req.params);
@@ -124,9 +118,7 @@ exports.put = async (req, res, next) => {
     }
 };
 
-/* =============================
-   Delete User (Admin)
-============================= */
+/* Delete User (Admin)*/
 exports.remove = async (req, res, next) => {
     try {
         if (!req.admin) return next({ status: 403, message: "Forbidden" });
@@ -142,9 +134,7 @@ exports.remove = async (req, res, next) => {
     }
 };
 
-/* =============================
-   Ban User (Admin)
-============================= */
+/* Ban User (Admin)*/
 exports.ban = async (req, res, next) => {
     try {
         if (!req.admin) return next({ status: 403, message: "Forbidden" });
@@ -161,9 +151,7 @@ exports.ban = async (req, res, next) => {
     }
 };
 
-/* =============================
-   Toggle Role (Admin)
-============================= */
+/* Toggle Role (Admin)*/
 exports.toggleRole = async (req, res, next) => {
     try {
         if (!req.admin) return next({ status: 403, message: "Forbidden" });

@@ -7,16 +7,13 @@ const {
 } = require("../validators/session");
 const { paginate } = require("../utils/helper");
 
-/* ---------- Get All Sessions (Admin) ---------- */
+/*  Get All Sessions (Admin)  */
 exports.get = async (req, res, next) => {
   try {
     if (!req.admin)
       return next({ status: 403, message: "Forbidden" });
 
-    const { searchParams } = new URL(
-      req.protocol + "://" + req.get("host") + req.originalUrl
-    );
-
+    const searchParams = req.query;
     const useCursor = searchParams.has("cursor");
 
     const result = await paginate(
@@ -35,7 +32,7 @@ exports.get = async (req, res, next) => {
   }
 };
 
-/* ---------- Get One Session ---------- */
+/*  Get One Session  */
 exports.getOne = async (req, res, next) => {
   try {
     const parsed = sessionIdParamSchema.safeParse(req.params);
@@ -53,7 +50,7 @@ exports.getOne = async (req, res, next) => {
   }
 };
 
-/* ---------- Create Session (Admin) ---------- */
+/*  Create Session (Admin)  */
 exports.post = async (req, res, next) => {
   try {
     if (!req.admin)
@@ -92,7 +89,7 @@ exports.post = async (req, res, next) => {
   }
 };
 
-/* ---------- Update Session (Admin) ---------- */
+/*  Update Session (Admin)  */
 exports.patch = async (req, res, next) => {
   try {
     if (!req.admin)
@@ -134,7 +131,7 @@ exports.patch = async (req, res, next) => {
   }
 };
 
-/* ---------- Delete Session (Admin) ---------- */
+/*  Delete Session (Admin)  */
 exports.remove = async (req, res, next) => {
   try {
     if (!req.admin)
@@ -155,18 +152,14 @@ exports.remove = async (req, res, next) => {
   }
 };
 
-/* ---------- Get Sessions by Course ---------- */
+/*  Get Sessions by Course  */
 exports.getSessionCourse = async (req, res, next) => {
   try {
-    const { searchParams } = new URL(
-      req.protocol + "://" + req.get("host") + req.originalUrl
-    );
-
+    const searchParams = req.query;
     const useCursor = searchParams.has("cursor");
 
     const course = await courseModel
-      .findOne({ shortName: req.params.shortName })
-      .lean();
+      .findOne({ shortName: req.params.shortName });
 
     if (!course)
       return next({ status: 404, message: "Course not found" });

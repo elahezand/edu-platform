@@ -7,15 +7,10 @@ const {
 
 const { paginate } = require("../utils/helper");
 
-/* ==============================
-   Get Categories
-============================== */
+/*  Get Categories*/
 exports.get = async (req, res, next) => {
   try {
-    const { searchParams } = new URL(
-      req.protocol + "://" + req.get("host") + req.originalUrl
-    );
-
+    const searchParams = req.query;
     const useCursor = searchParams.has("cursor");
 
     const result = await paginate(
@@ -34,9 +29,7 @@ exports.get = async (req, res, next) => {
   }
 };
 
-/* ==============================
-   Create Category
-============================== */
+/* Create Category*/
 exports.post = async (req, res, next) => {
   try {
     if (!req.admin)
@@ -66,9 +59,7 @@ exports.post = async (req, res, next) => {
   }
 };
 
-/* ==============================
-   Update Category
-============================== */
+/* Update Category*/
 exports.patch = async (req, res, next) => {
   try {
     if (!req.admin)
@@ -114,9 +105,7 @@ exports.patch = async (req, res, next) => {
   }
 };
 
-/* ==============================
-   Delete Category
-============================== */
+/* Delete Category*/
 exports.remove = async (req, res, next) => {
   try {
     if (!req.admin)

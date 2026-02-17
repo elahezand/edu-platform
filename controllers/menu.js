@@ -1,8 +1,6 @@
 const menuModel = require("../models/menu");
 const { menuIdParamSchema, updateMenuSchema, createMenuSchema } = require("../validators/menu");
-// ==============================
-// Get All Menus
-// ==============================
+// Get All Menus// 
 exports.get = async (req, res, next) => {
     try {
         const menus = await menuModel.find().lean();
@@ -12,9 +10,7 @@ exports.get = async (req, res, next) => {
     }
 };
 
-// ==============================
-// Get One Menu
-// ==============================
+//  Get One Menu// 
 exports.getOne = async (req, res, next) => {
     try {
         const parsedId = menuIdParamSchema.safeParse(req.params);
@@ -30,9 +26,7 @@ exports.getOne = async (req, res, next) => {
     }
 };
 
-// ==============================
-// Create Menu
-// ==============================
+// Create Menu// 
 exports.post = async (req, res, next) => {
     try {
         if (!req.admin)
@@ -49,9 +43,7 @@ exports.post = async (req, res, next) => {
     }
 };
 
-// ==============================
-// Update Menu
-// ==============================
+//  Update Menu// 
 exports.patch = async (req, res, next) => {
     try {
         if (!req.admin)
@@ -80,9 +72,7 @@ exports.patch = async (req, res, next) => {
     }
 };
 
-// ==============================
-// Delete Menu
-// ==============================
+// Delete Menu// 
 exports.remove = async (req, res, next) => {
     if (!req.admin)
         return next({ status: 403, message: "Forbidden" });

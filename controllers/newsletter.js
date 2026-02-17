@@ -1,5 +1,6 @@
 const newsletterModel = require("../models/newsletter");
 const createNewsletterSchema = require("../validators/newsLetter")
+const { paginate } = require("../utils/helper");
 
 // GET all newsletters (admin)
 exports.getAll = async (req, res, next) => {
@@ -7,8 +8,16 @@ exports.getAll = async (req, res, next) => {
         if (!req.admin)
             return next({ status: 403, message: "Forbidden" });
 
-        const newsletters = await newsletterModel.find().lean();
-        res.status(200).json(newsletters);
+        const searchParams = req.query;
+        const result = await paginate(
+            newsletterModel,
+            searchParams,
+            {},
+            null,
+            useCursor,
+            true
+        );
+        res.status(200).json(result);
     } catch (err) {
         next(err);
     }

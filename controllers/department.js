@@ -6,9 +6,7 @@ const {
     departmentIdParamSchema,
 } = require("../validators/department");
 
-/* ==============================
-   Get All (with parent)
-============================== */
+/* Get All (with parent)*/
 exports.get = async (req, res, next) => {
     try {
         const departments = await departmentModel
@@ -22,9 +20,7 @@ exports.get = async (req, res, next) => {
     }
 };
 
-/* ==============================
-   Get One (with parent + children)
-============================== */
+/* Get One (with parent + children)*/
 exports.getOne = async (req, res, next) => {
     try {
         const parsed = departmentIdParamSchema.safeParse(req.params);
@@ -53,9 +49,7 @@ exports.getOne = async (req, res, next) => {
     }
 };
 
-/* ==============================
-   Create (supports parent)
-============================== */
+/* Create (supports parent)*/
 exports.post = async (req, res, next) => {
     try {
         if (!req.admin)
@@ -76,9 +70,7 @@ exports.post = async (req, res, next) => {
     }
 };
 
-/* ==============================
-   Update (title + parent)
-============================== */
+/* Update (title + parent)*/
 exports.patch = async (req, res, next) => {
     try {
         if (!req.admin)
@@ -115,9 +107,7 @@ exports.patch = async (req, res, next) => {
     }
 };
 
-/* ==============================
-   Delete (prevent if has children)
-============================== */
+/*Delete (prevent if has children)*/
 exports.remove = async (req, res, next) => {
     try {
 
