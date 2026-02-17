@@ -7,15 +7,10 @@ const {
 
 const { paginate } = require("../utils/helper");
 
-/* ==============================
-   Get Articles
-============================== */
+/* Get Articles*/
 exports.get = async (req, res, next) => {
   try {
-    const { searchParams } = new URL(
-      req.protocol + "://" + req.get("host") + req.originalUrl
-    );
-
+    const searchParams = req.query;
     const useCursor = searchParams.has("cursor");
 
     const result = await paginate(
@@ -33,9 +28,7 @@ exports.get = async (req, res, next) => {
   }
 };
 
-/* ==============================
-   Get One Article
-============================== */
+/*   Get One Article*/
 exports.getOne = async (req, res, next) => {
   try {
     const parsed = idParamSchema.safeParse(req.params);
@@ -56,9 +49,7 @@ exports.getOne = async (req, res, next) => {
   }
 };
 
-/* ==============================
-   Create Article
-============================== */
+/* Create Article*/
 exports.post = async (req, res, next) => {
   try {
     if (!req.admin)
@@ -97,9 +88,7 @@ exports.post = async (req, res, next) => {
   }
 };
 
-/* ==============================
-   Update Article
-============================== */
+/* Update Article*/
 exports.patch = async (req, res, next) => {
   try {
     if (!req.admin)
@@ -144,9 +133,7 @@ exports.patch = async (req, res, next) => {
   }
 };
 
-/* ==============================
-   Delete Article
-============================== */
+/* Delete Article*/
 exports.remove = async (req, res, next) => {
   try {
     if (!req.admin)

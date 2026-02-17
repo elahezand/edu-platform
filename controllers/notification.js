@@ -53,6 +53,7 @@ exports.patch = async (req, res, next) => {
     try {
         if (!req.admin)
             return next({ status: 403, message: "Forbidden" });
+       
         const parsedId = notificationIdParamSchema.safeParse(req.params);
         if (!parsedId.success)
             return next({ status: 422, message: "Invalid ID" });

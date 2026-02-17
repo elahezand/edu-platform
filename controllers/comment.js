@@ -9,15 +9,10 @@ const {
 
 const { paginate } = require("../utils/helper");
 
-/* ==============================
-   Get Comments
-============================== */
+/* Get Comments*/
 exports.get = async (req, res, next) => {
   try {
-    const { searchParams } = new URL(
-      req.protocol + "://" + req.get("host") + req.originalUrl
-    );
-
+    const searchParams = req.query;
     const useCursor = searchParams.has("cursor");
     const course = searchParams.get("course");
 
@@ -36,9 +31,7 @@ exports.get = async (req, res, next) => {
   }
 };
 
-/* ==============================
-   Create Comment (User)
-============================== */
+/* Create Comment (User)*/
 exports.post = async (req, res, next) => {
   try {
     if (!req.user)
@@ -68,9 +61,7 @@ exports.post = async (req, res, next) => {
   }
 };
 
-/* ==============================
-   Answer Comment (Admin)
-============================== */
+/* Answer Comment (Admin)*/
 exports.answer = async (req, res, next) => {
   try {
     if (!req.admin)
@@ -111,9 +102,7 @@ exports.answer = async (req, res, next) => {
   }
 };
 
-/* ==============================
-   Accept Comment (Admin)
-============================== */
+/* Accept Comment (Admin)*/
 exports.accept = async (req, res, next) => {
   try {
     if (!req.admin)
@@ -136,9 +125,7 @@ exports.accept = async (req, res, next) => {
   }
 };
 
-/* ==============================
-   Update Comment (Admin)
-============================== */
+/* Update Comment (Admin)*/
 exports.patch = async (req, res, next) => {
   try {
     if (!req.admin)
@@ -171,9 +158,7 @@ exports.patch = async (req, res, next) => {
   }
 };
 
-/* ==============================
-   Delete Comment (Admin)
-============================== */
+/* Delete Comment (Admin)*/
 exports.remove = async (req, res, next) => {
   try {
     if (!req.admin)

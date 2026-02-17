@@ -9,22 +9,17 @@ const {
 } = require("../validators/course");
 const { paginate } = require("../utils/helper");
 
-/* ==============================
-   Get All Courses
-============================== */
+/* Get All Courses */
 exports.getAll = async (req, res, next) => {
   try {
-    const { searchParams } = new URL(
-      req.protocol + "://" + req.get("host") + req.originalUrl
-    );
-
+    const searchParams = req.query;
     const useCursor = searchParams.has("cursor");
 
     const result = await paginate(
       courseModel,
       searchParams,
       {},
-      "sessions",
+      null,
       useCursor,
       true
     );
@@ -36,9 +31,67 @@ exports.getAll = async (req, res, next) => {
   }
 };
 
-/* ==============================
-   Get One Course
-============================== */
+/* Get Popular */
+exports.getPopular = async (req, res, next) => {
+  try {
+    const searchParams = req.query;
+    const useCursor = searchParams.has("cursor");
+
+    const result = await paginate(
+      courseModel,
+      searchParams,
+      { rating: { $gt: 4 } },
+      null,
+      useCursor,
+      true
+    );
+
+    res.status(200).json({ courses: result });
+
+  } catch (err) {
+    next(err);
+  }
+}
+/*Get Courses By Category*/
+exports.getCategoryCourses = async (req, res, next) => {
+  try {
+    const searchParams = req.query;
+    const { categoryName } = req.params;
+    const category = await categoryModel.findOne({ name: categoryName });
+
+    if (!category)
+      return res.json([]);
+
+    const result = await paginate(
+      courseModel,
+      searchParams,
+      { categoryID: category._id },
+      "creator categoryID",
+      useCursor,
+      true
+    );
+    res.json(result);
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+/* Get Related Courses*/
+exports.getRelated = async (req, res, next) => {
+  try {
+    const { shortName } = req.params;
+    const course = await courseModel.findOne({ shortName });
+    let relatedCourses = await courseModel.find({
+      categoryID: course.categoryID,
+    });
+    res.json(relatedCourses.splice(0, 4));
+  } catch (error) {
+    next(error);
+  }
+};
+
+/*Get One Course*/
 exports.getOne = async (req, res, next) => {
   try {
     const parsed = courseIdParamSchema.safeParse(req.params);
@@ -82,9 +135,7 @@ exports.getOne = async (req, res, next) => {
     next(err);
   }
 };
-/* ==============================
-   Create Course
-============================== */
+/* Create Course*/
 exports.post = async (req, res, next) => {
   try {
     if (!req.admin) return next({ status: 403, message: "Forbidden" });
@@ -111,9 +162,7 @@ exports.post = async (req, res, next) => {
   }
 };
 
-/* ==============================
-   Update Course
-============================== */
+/* Update Course*/
 exports.patch = async (req, res, next) => {
   try {
     if (!req.admin) return next({ status: 403, message: "Forbidden" });
@@ -144,9 +193,7 @@ exports.patch = async (req, res, next) => {
   }
 };
 
-/* ==============================
-   Delete Course
-============================== */
+/* Delete Course */
 exports.remove = async (req, res, next) => {
   try {
     if (!req.admin) return next({ status: 403, message: "Forbidden" });
@@ -164,34 +211,7 @@ exports.remove = async (req, res, next) => {
   }
 };
 
-
-/* ==============================
-   Get Courses By Category
-============================== */
-exports.getCategoryCourses = async (req, res, next) => {
-  try {
-    const { categoryName } = req.params;
-    const category = await categoryModel.findOne({ name: categoryName });
-
-    if (!category)
-      return res.json([]);
-
-    const categoryCourses = await courseModel
-      .find({ categoryID: category._id })
-      .populate("creator")
-      .populate("categoryID")
-      .lean();
-
-    res.json(categoryCourses);
-
-  } catch (error) {
-    next(error);
-  }
-};
-
-/* ==============================
-   Register User To Course
-============================== */
+/* Register User To Course*/
 exports.register = async (req, res, next) => {
   try {
 
@@ -214,22 +234,6 @@ exports.register = async (req, res, next) => {
     return res
       .status(201)
       .json({ message: "you are registered successfully." });
-  } catch (error) {
-    next(error);
-  }
-};
-
-/* ==============================
-   Get Related Courses
-============================== */
-exports.getRelated = async (req, res, next) => {
-  try {
-    const { shortName } = req.params;
-    const course = await courseModel.findOne({ shortName });
-    let relatedCourses = await courseModel.find({
-      categoryID: course.categoryID,
-    });
-    res.json(relatedCourses.splice(0, 4));
   } catch (error) {
     next(error);
   }

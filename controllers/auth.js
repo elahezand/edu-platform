@@ -192,43 +192,43 @@ exports.logout = async (req, res, next) => {
 exports.refreshToken = async (req, res, next) => {
   try {
     const { refreshToken } = req.cookies;
-    if (!refreshToken)
+    if (!refreshToken) {
       return next({ status: 401, message: "Unauthorized" });
-
-    const user = await UserModel.findOne({ refreshToken });
-    if (!user)
-      return next({ status: 401, message: "Unauthorized" });
+    }
 
     const payload = await verifyRefreshToken(refreshToken);
-    if (!payload)
-      return next({ status: 401, message: "Expired token" });
+    if (!payload) {
+      return next({ status: 401, message: "Token expired" });
+    }
+
+    const user = await UserModel.findOne({ refreshToken }).lean();
+    if (!user) {
+      return next({ status: 401, message: "Session invalid" });
+    }
 
     const newAccessToken = await generateToken({
       id: user._id,
-      email: payload.email
+      email: user.email,
+      role: user.role
     });
 
-    const newRefreshToken = await generateRefreshToken({
-      id: user._id,
-      email: payload.email
-    });
-
-    user.refreshToken = newRefreshToken;
-    await user.save();
+    const cookieOptions = {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production"
+    }
 
     res.cookie("token", newAccessToken, {
       ...cookieOptions,
       maxAge: 1000 * 60 * 60 * 24
     });
 
-    res.cookie("refreshToken", newRefreshToken, {
-      ...cookieOptions,
-      maxAge: 1000 * 60 * 60 * 24 * 7
+    return res.status(200).json({
+      message: "Token refreshed"
     });
-
-    res.status(200).json({ message: "Token refreshed successfully" });
 
   } catch (err) {
     next(err);
   }
 };
+

@@ -5,18 +5,13 @@ const {
 } = require("../validators/contact");
 const { paginate } = require("../utils/helper");
 
-/* ==============================
-   Get All Contacts (Admin)
-============================== */
+/*   Get All Contacts (Admin)*/
 exports.get = async (req, res, next) => {
   try {
     if (!req.admin)
       return next({ status: 403, message: "Forbidden" });
 
-    const { searchParams } = new URL(
-      req.protocol + "://" + req.get("host") + req.originalUrl
-    );
-
+    const searchParams = req.query;
     const useCursor = searchParams.has("cursor");
 
     const result = await paginate(
@@ -35,9 +30,7 @@ exports.get = async (req, res, next) => {
   }
 };
 
-/* ==============================
-   Get One Contact (Admin)
-============================== */
+/* Get One Contact (Admin)*/
 exports.getOne = async (req, res, next) => {
   try {
     if (!req.admin)
@@ -47,7 +40,7 @@ exports.getOne = async (req, res, next) => {
     if (!parsed.success)
       return next({ status: 422, message: "Invalid ID" });
 
-    const contact = await contactModel.findById(parsed.data.id).lean();
+    const contact = await contactModel.findById(parsed.data.id);
     if (!contact)
       return next({ status: 404, message: "Contact not found" });
 
@@ -58,9 +51,7 @@ exports.getOne = async (req, res, next) => {
   }
 };
 
-/* ==============================
-   Create Contact (Public)
-============================== */
+/*  Create Contact (Public)*/
 exports.post = async (req, res, next) => {
   try {
     const parsed = createContactSchema.safeParse(req.body);
@@ -83,9 +74,7 @@ exports.post = async (req, res, next) => {
   }
 };
 
-/* ==============================
-   Delete Contact (Admin)
-============================== */
+/*  Delete Contact (Admin)*/
 exports.remove = async (req, res, next) => {
   try {
     if (!req.admin)

@@ -1,27 +1,34 @@
 const offModel = require("../models/off");
-const { offIdParamSchema,createOffSchema,updateOffSchema } = require("../validators/off"); 
+const { offIdParamSchema, createOffSchema, updateOffSchema } = require("../validators/off");
 
-/* ==============================
-   Get All Offs
-============================== */
+/* Get All Offs*/
 exports.getAll = async (req, res, next) => {
   try {
-    const offs = await offModel.find()
-      .populate("course", "title")  
-      .populate("creator", "name") 
-      .lean();
+    if (!req.admin) return next({ status: 403, message: "Forbidden" });
 
-    res.status(200).json(offs);
+    const searchParams = req.query
+    const result = await paginate(
+      offModel,
+      searchParams,
+      {},
+      "course creator",
+      useCursor,
+      true
+    );
+
+    res.status(200).json(result);
   } catch (err) {
     next(err);
   }
 };
 
-/* ==============================
+/* 
    Get One Off
-============================== */
+ */
 exports.getOne = async (req, res, next) => {
   try {
+    if (!req.admin) return next({ status: 403, message: "Forbidden" });
+
     const parsed = offIdParamSchema.safeParse(req.params);
     if (!parsed.success) return next({ status: 422, message: "Invalid ID" });
 
@@ -38,11 +45,11 @@ exports.getOne = async (req, res, next) => {
   }
 };
 
-/* ==============================
-   Create Off
-============================== */
+/*  Create Off*/
 exports.post = async (req, res, next) => {
   try {
+    if (!req.admin) return next({ status: 403, message: "Forbidden" });
+
     const parsed = createOffSchema.safeParse(req.body);
     if (!parsed.success)
       return next({ status: 422, message: "Invalid data", errors: parsed.error.issues });
@@ -58,15 +65,17 @@ exports.post = async (req, res, next) => {
   }
 };
 
-/* ==============================
+/* 
    Update Off
-============================== */
+ */
 exports.patch = async (req, res, next) => {
   try {
+    if (!req.admin) return next({ status: 403, message: "Forbidden" });
+
     const idParsed = offIdParamSchema.safeParse(req.params);
     if (!idParsed.success) return next({ status: 422, message: "Invalid ID" });
 
-    const parsed = updateOffSchema.safeParse(req.body); 
+    const parsed = updateOffSchema.safeParse(req.body);
     if (!parsed.success)
       return next({ status: 422, message: "Invalid data", errors: parsed.error.issues });
 
@@ -84,11 +93,11 @@ exports.patch = async (req, res, next) => {
   }
 };
 
-/* ==============================
-   Delete Off
-============================== */
+/*   Delete Off*/
 exports.remove = async (req, res, next) => {
   try {
+    if (!req.admin) return next({ status: 403, message: "Forbidden" });
+
     const parsed = offIdParamSchema.safeParse(req.params);
     if (!parsed.success) return next({ status: 422, message: "Invalid ID" });
 

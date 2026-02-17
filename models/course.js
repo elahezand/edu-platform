@@ -13,7 +13,19 @@ const courseSchema = new mongoose.Schema(
         rating: { type: Number, default: 0 },
         reviewsCount: { type: Number, default: 0 },
     },
-    { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
+     {
+        timestamps: true,
+        toObject: { virtuals: true },
+        toJSON: {
+            virtuals: true,
+            transform(doc, ret) {
+                ret.id = ret._id.toString();
+                delete ret._id;
+                delete ret.__v;
+                return ret;
+            },
+        },
+    }
 );
 
 // Virtual for sessions

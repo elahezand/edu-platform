@@ -5,9 +5,7 @@ const {
     infoIdParamSchema,
 } = require("../validators/info");
 
-/* ==============================
-   Get Info (Public)
-============================== */
+/* Get Info (Public)*/
 exports.get = async (req, res, next) => {
     try {
         const info = await infoModel.findOne().lean();
@@ -17,9 +15,7 @@ exports.get = async (req, res, next) => {
     }
 };
 
-/* ==============================
-   Create (Only if not exists)
-============================== */
+/* Create (Only if not exists)*/
 exports.post = async (req, res, next) => {
 
     try {
@@ -41,9 +37,7 @@ exports.post = async (req, res, next) => {
     }
 };
 
-/* ==============================
-   Update Singleton
-============================== */
+/*  Update Singleton*/
 exports.patch = async (req, res, next) => {
     try {
 
@@ -70,9 +64,7 @@ exports.patch = async (req, res, next) => {
     }
 };
 
-/* ==============================
-   Delete
-============================== */
+/*  Delete*/
 exports.remove = async (req, res, next) => {
     try {
         if (!req.admin)
