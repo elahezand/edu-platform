@@ -20,6 +20,7 @@
     "dotenv": "^16.6.1",
     "express": "^5.2.1",
     "fastest-validator": "^1.19.1",
+    "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.2.1",
     "multer": "^2.0.2",

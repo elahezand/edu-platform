@@ -13,14 +13,12 @@ const schema = new mongoose.Schema(
             type: String,
             required: [true, "Phone number is required"],
             unique: true,
-            match: [/^09\d{9}$/, "Invalid phone number format"],
         },
 
         email: {
             type: String,
             lowercase: true,
             trim: true,
-            match: [/^\S+@\S+\.\S+$/, "Invalid email format"],
         },
 
         password: {

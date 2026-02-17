@@ -7,7 +7,6 @@ const paths = {
   videoUrl: path.join(__dirname, "..", "public", "sessions", "videos"),
   avatar: path.join(__dirname, "..", "public", "users", "avatars"),
   articleCover: path.join(__dirname, "..", "public", "articles", "covers"),
-
 };
 
 Object.values(paths).forEach(p => {
@@ -16,38 +15,46 @@ Object.values(paths).forEach(p => {
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    if (paths[file.fieldname]) {
-      cb(null, paths[file.fieldname]);
+    const targetField = file.fieldname === "cover" ? "articleCover" : file.fieldname;
+    
+    if (paths[targetField]) {
+      cb(null, paths[targetField]);
     } else {
-      cb(new Error("Unknown field"), false);
+      cb(new Error(`No path defined for field: ${file.fieldname}`), false);
     }
   },
 
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
-    const name = `${file.fieldname}-${Date.now()}${ext}`;
-    cb(null, name);
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
   }
 });
 
 const fileFilter = (req, file, cb) => {
-  if (file.fieldname === "coverImage" && file.mimetype.startsWith("image/")) {
-    return cb(null, true);
-  }
+  const allowedMimeTypes = {
+    coverImage: "image/",
+    avatar: "image/",
+    cover: "image/",     
+    articleCover: "image/",
+    videoUrl: "video/"
+  };
 
-  if (file.fieldname === "avatar" && file.mimetype.startsWith("image/")) {
-    return cb(null, true);
-  }
+  const expectedType = allowedMimeTypes[file.fieldname];
 
-  if (file.fieldname === "videoUrl" && file.mimetype.startsWith("video/")) {
-    return cb(null, true);
+  if (expectedType && file.mimetype.startsWith(expectedType)) {
+    cb(null, true);
+  } else {
+    cb(new Error(`Invalid file type for ${file.fieldname}. Expected ${expectedType}`), false);
   }
-  if (file.fieldname === "cover" && file.mimetype.startsWith("video/")) {
-    return cb(null, true);
-  }
-  cb(new Error(`Invalid file type for ${file.fieldname}`), false);
 };
 
-const upload = multer({ storage, fileFilter });
+const upload = multer({ 
+  storage, 
+  fileFilter,
+  limits: {
+    fileSize: 100 * 1024 * 1024,
+  }
+});
 
 module.exports = upload;

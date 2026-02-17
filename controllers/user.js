@@ -136,19 +136,34 @@ exports.remove = async (req, res, next) => {
 
 /* Ban User (Admin)*/
 exports.ban = async (req, res, next) => {
-    try {
-        if (!req.admin) return next({ status: 403, message: "Forbidden" });
+  try {
+    const userId = req.body.user ? String(req.body.user) : null;
+    const email = req.body.email ? String(req.body.email) : null;
+    const phone = req.body.phone ? String(req.body.phone) : null;
 
-        const { user, email, phone } = req.body;
-        const exists = await BanModel.findOne({ user });
-        if (!exists) await BanModel.create({ user, email, phone });
-
-        await UserModel.findOneAndDelete({ $or: [{ _id: user }, { phone }] });
-
-        res.status(200).json({ message: "User banned successfully" });
-    } catch (err) {
-        next(err);
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid or missing User ID" });
     }
+    const exists = await BanModel.findOne({ user: userId }).lean();
+
+    if (!exists) {
+      await BanModel.create({ 
+        user: userId, 
+        email, 
+        phone 
+      });
+    }
+    await UserModel.findOneAndDelete({
+      $or: [
+        { _id: userId },
+        { phone: phone }
+      ]
+    });
+
+    return res.status(200).json({ message: "User banned successfully" });
+  } catch (err) {
+    next(err);
+  }
 };
 
 /* Toggle Role (Admin)*/

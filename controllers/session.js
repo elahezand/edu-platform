@@ -156,13 +156,14 @@ exports.remove = async (req, res, next) => {
 exports.getSessionCourse = async (req, res, next) => {
   try {
     const searchParams = req.query;
+    const shortName = String(req.params.shortName);
+
+    const course = await courseModel.findOne({ shortName }).lean();
+
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
     const useCursor = searchParams.has("cursor");
-
-    const course = await courseModel
-      .findOne({ shortName: req.params.shortName });
-
-    if (!course)
-      return next({ status: 404, message: "Course not found" });
 
     const result = await paginate(
       sessionModel,
@@ -173,7 +174,7 @@ exports.getSessionCourse = async (req, res, next) => {
       true
     );
 
-    res.status(200).json({ sessions: result });
+    return res.status(200).json({ sessions: result });
 
   } catch (err) {
     next(err);
