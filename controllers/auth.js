@@ -192,7 +192,8 @@ exports.logout = async (req, res, next) => {
 exports.refreshToken = async (req, res, next) => {
   try {
     const { refreshToken } = req.cookies;
-    if (!refreshToken) {
+
+    if (!refreshToken || typeof refreshToken !== 'string') {
       return next({ status: 401, message: "Unauthorized" });
     }
 
@@ -212,23 +213,13 @@ exports.refreshToken = async (req, res, next) => {
       role: user.role
     });
 
-    const cookieOptions = {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production"
-    }
-
     res.cookie("token", newAccessToken, {
       ...cookieOptions,
       maxAge: 1000 * 60 * 60 * 24
     });
-
-    return res.status(200).json({
-      message: "Token refreshed"
-    });
+    return res.status(200).json({ message: "Token refreshed" });
 
   } catch (err) {
     next(err);
   }
 };
-

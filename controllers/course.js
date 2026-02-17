@@ -57,6 +57,10 @@ exports.getCategoryCourses = async (req, res, next) => {
   try {
     const searchParams = req.query;
     const { categoryName } = req.params;
+
+    if (typeof categoryName !== 'string') {
+      return next(err)({ status: 400, message: "Invalid category name" });
+    }
     const category = await categoryModel.findOne({ name: categoryName });
 
     if (!category)
@@ -81,7 +85,8 @@ exports.getCategoryCourses = async (req, res, next) => {
 exports.getRelated = async (req, res, next) => {
   try {
     const { shortName } = req.params;
-    const course = await courseModel.findOne({ shortName });
+    const course = await courseModel.findOne({ shortName: String(shortName) });
+
     let relatedCourses = await courseModel.find({
       categoryID: course.categoryID,
     });
@@ -214,26 +219,39 @@ exports.remove = async (req, res, next) => {
 /* Register User To Course*/
 exports.register = async (req, res, next) => {
   try {
+    const courseId = req.params.id;
+    const price = Number(req.body.price);
+
+    if (!mongoose.Types.ObjectId.isValid(courseId)) {
+      return res.status(400).json({ message: "Invalid Course ID" });
+    }
+
+    if (isNaN(price)) {
+      return res.status(400).json({ message: "Invalid price format" });
+    }
 
     const isUserAlreadyRegistered = await courseUserModel
-      .findOne({ user: req.user._id, course: req.params.id })
+      .findOne({
+        user: req.user._id,
+        course: String(courseId)
+      })
       .lean();
 
     if (isUserAlreadyRegistered) {
-      return res
-        .status(409)
-        .json({ message: "you are already registered to this course." });
+      return res.status(400).json({ 
+        message: "You are already registered to this course." 
+      });
     }
 
     await courseUserModel.create({
       user: req.user._id,
-      course: req.params.id,
-      price: req.body.price,
+      course: String(courseId),
+      price: price,
     });
 
-    return res
-      .status(201)
-      .json({ message: "you are registered successfully." });
+    return res.status(201).json({ 
+      message: "You are registered successfully." 
+    });
   } catch (error) {
     next(error);
   }

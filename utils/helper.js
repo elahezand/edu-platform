@@ -12,19 +12,24 @@ const paginate = async (
   if (route) {
     limit = Number(searchParams?.get("limit")) || 10;
     page = Number(searchParams?.get("page")) || 1;
-    cursor = searchParams?.get("cursor");
+
+    const rawCursor = searchParams?.get("cursor");
+    cursor = rawCursor ? String(rawCursor) : null;
   } else {
     limit = Number(searchParams?.limit) || 10;
     page = Number(searchParams?.page) || 1;
-    cursor = searchParams?.cursor;
+    cursor = searchParams?.cursor ? String(searchParams.cursor) : null;
   }
+
+  limit = Math.max(1, Math.min(limit, 100));
+  page = Math.max(1, page);
 
   if (useCursor) {
     const query = cursor ? { ...filter, _id: { $lt: cursor } } : { ...filter };
 
     const data = await Model.find(query)
       .sort(sortOption)
-      .limit(limit + 1)
+      .limit(limit + 1) 
       .populate(populate)
       .lean();
 
