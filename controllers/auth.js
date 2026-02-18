@@ -150,9 +150,6 @@ exports.signin = async (req, res, next) => {
 // GET ME
 exports.getMe = async (req, res, next) => {
   try {
-    if (!req.user)
-      return next({ status: 401, message: "Unauthorized" });
-
     const isBanUser = await BanModel.findOne({
       $or: [{ email: req.user.email }, { phone: req.user.phone }]
     });
@@ -202,7 +199,7 @@ exports.refreshToken = async (req, res, next) => {
       return next({ status: 401, message: "Token expired" });
     }
 
-    const user = await UserModel.findOne({ refreshToken }).lean();
+    const user = await UserModel.findOne({ refreshToken: String(refreshToken) }).lean();
     if (!user) {
       return next({ status: 401, message: "Session invalid" });
     }

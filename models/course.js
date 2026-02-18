@@ -3,17 +3,19 @@ const mongoose = require("mongoose");
 const courseSchema = new mongoose.Schema(
     {
         title: { type: String, required: true, trim: true },
-        slug: { type: String, unique: true, lowercase: true, trim: true },
+        slug: { type: String, unique: true, lowercase: true, trim: true, required: true },
         description: { type: String, required: true, trim: true },
-        price: { type: Number, default: 0 },
+        price: { type: Number, default: 0,required: true  },
         category: { type: mongoose.Schema.Types.ObjectId, ref: "Category", required: true },
         instructor: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-        coverImage: { type: String, default: "" },
-        isActive: { type: Boolean, default: true },
-        rating: { type: Number, default: 0 },
+        coverImage: { type: String, default: "", required: true },
+        isActive: { type: Boolean, default: true, required: true },
+        support: { type: String, default: "" },
+        rating: { type: Number, default: 0},
+        discount: { type: Number, default: 0 },
         reviewsCount: { type: Number, default: 0 },
     },
-     {
+    {
         timestamps: true,
         toObject: { virtuals: true },
         toJSON: {
@@ -30,13 +32,13 @@ const courseSchema = new mongoose.Schema(
 
 // Virtual for sessions
 courseSchema.virtual("sessions", {
-    ref: "Session",         
-    localField: "_id",       
-    foreignField: "course", 
+    ref: "Session",
+    localField: "_id",
+    foreignField: "course",
     justOne: false
 });
 
 const courseModel =
-  mongoose.models.Course || mongoose.model("Course", courseSchema);
+    mongoose.models.Course || mongoose.model("Course", courseSchema);
 
 module.exports = courseModel;

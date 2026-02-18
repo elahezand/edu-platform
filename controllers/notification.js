@@ -4,9 +4,6 @@ const { createNotificationSchema, notificationIdParamSchema, updateNotificationS
 // Get all notifications
 exports.getAll = async (req, res, next) => {
     try {
-        if (!req.admin)
-            return next({ status: 403, message: "Forbidden" });
-
         const notifications = await notificationModel.find().populate("admin", "name email").lean();
         res.status(200).json(notifications);
     } catch (err) {
@@ -17,8 +14,6 @@ exports.getAll = async (req, res, next) => {
 // Get one notification by ID
 exports.getOne = async (req, res, next) => {
     try {
-        if (!req.admin)
-            return next({ status: 403, message: "Forbidden" });
         const parsedId = notificationIdParamSchema.safeParse(req.params);
         if (!parsedId.success)
             return next({ status: 422, message: "Invalid ID" });
@@ -35,9 +30,6 @@ exports.getOne = async (req, res, next) => {
 // Create a new notification
 exports.post = async (req, res, next) => {
     try {
-        if (!req.admin)
-            return next({ status: 403, message: "Forbidden" });
-
         const parsed = createNotificationSchema.safeParse(req.body);
         if (!parsed.success) return res.status(422).json({ message: parsed.error.errors });
 
@@ -51,9 +43,6 @@ exports.post = async (req, res, next) => {
 // Update a notification
 exports.patch = async (req, res, next) => {
     try {
-        if (!req.admin)
-            return next({ status: 403, message: "Forbidden" });
-       
         const parsedId = notificationIdParamSchema.safeParse(req.params);
         if (!parsedId.success)
             return next({ status: 422, message: "Invalid ID" });
@@ -79,8 +68,6 @@ exports.patch = async (req, res, next) => {
 // Delete a notification
 exports.remove = async (req, res, next) => {
     try {
-        if (!req.admin)
-            return next({ status: 403, message: "Forbidden" });
         const parsedId = notificationIdParamSchema.safeParse(req.params);
         if (!parsedId.success)
             return next({ status: 422, message: "Invalid ID" });

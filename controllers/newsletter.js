@@ -5,10 +5,9 @@ const { paginate } = require("../utils/helper");
 // GET all newsletters (admin)
 exports.getAll = async (req, res, next) => {
     try {
-        if (!req.admin)
-            return next({ status: 403, message: "Forbidden" });
+        const searchParams = new URLSearchParams(req.query);
+        const useCursor = searchParams.has("cursor");
 
-        const searchParams = req.query;
         const result = await paginate(
             newsletterModel,
             searchParams,
@@ -26,7 +25,6 @@ exports.getAll = async (req, res, next) => {
 // POST create new newsletter
 exports.post = async (req, res, next) => {
     try {
-
         const parsed = createNewsletterSchema.safeParse(req.body);
         if (!parsed.success) {
             return res.status(422).json({ errors: parsed.error.issues });

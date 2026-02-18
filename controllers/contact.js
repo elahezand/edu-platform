@@ -8,10 +8,8 @@ const { paginate } = require("../utils/helper");
 /*   Get All Contacts (Admin)*/
 exports.get = async (req, res, next) => {
   try {
-    if (!req.admin)
-      return next({ status: 403, message: "Forbidden" });
 
-    const searchParams = req.query;
+    const searchParams = new URLSearchParams(req.query);
     const useCursor = searchParams.has("cursor");
 
     const result = await paginate(
@@ -33,9 +31,6 @@ exports.get = async (req, res, next) => {
 /* Get One Contact (Admin)*/
 exports.getOne = async (req, res, next) => {
   try {
-    if (!req.admin)
-      return next({ status: 403, message: "Forbidden" });
-
     const parsed = contactIdParamSchema.safeParse(req.params);
     if (!parsed.success)
       return next({ status: 422, message: "Invalid ID" });
@@ -77,9 +72,6 @@ exports.post = async (req, res, next) => {
 /*  Delete Contact (Admin)*/
 exports.remove = async (req, res, next) => {
   try {
-    if (!req.admin)
-      return next({ status: 403, message: "Forbidden" });
-
     const parsed = contactIdParamSchema.safeParse(req.params);
     if (!parsed.success)
       return next({ status: 422, message: "Invalid ID" });

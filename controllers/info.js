@@ -19,9 +19,6 @@ exports.get = async (req, res, next) => {
 exports.post = async (req, res, next) => {
 
     try {
-        if (!req.admin)
-            return next({ status: 403, message: "Forbidden" });
-
         const parsed = createInfoSchema.safeParse(req.body);
         if (!parsed.success)
             return next({ status: 422, message: parsed.error.message });
@@ -40,10 +37,6 @@ exports.post = async (req, res, next) => {
 /*  Update Singleton*/
 exports.patch = async (req, res, next) => {
     try {
-
-        if (!req.admin)
-            return next({ status: 403, message: "Forbidden" });
-
         const parsedId = infoIdParamSchema.safeParse(req.params);
         if (!parsedId.success)
             return next({ status: 422, message: "Invalid ID" });
@@ -67,9 +60,6 @@ exports.patch = async (req, res, next) => {
 /*  Delete*/
 exports.remove = async (req, res, next) => {
     try {
-        if (!req.admin)
-            return next({ status: 403, message: "Forbidden" });
-
         const parsed = infoIdParamSchema.safeParse(req.params);
         if (!parsed.success)
             return next({ status: 422, message: "Invalid ID" });

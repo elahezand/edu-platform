@@ -2,7 +2,7 @@ const express = require("express");
 const sessionRouter = express.Router();
 const controller = require("../controllers/session");
 const { authAdmin } = require("../middlewares/authMiddleware");
-const upload = require("../middlewares/multer");
+const upload = require("../utils/multer");
 
 sessionRouter.get("/", authAdmin, controller.get);
 sessionRouter.get("/:id", authAdmin, controller.getOne);

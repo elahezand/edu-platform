@@ -1,7 +1,7 @@
 const express = require("express");
 const articleRouter = express.Router();
 const controller = require("../controllers/article");
-const upload = require("../middlewares/multer");
+const upload = require("../utils/multer");
 const { authAdmin } = require("../middlewares/authMiddleware");
 
 articleRouter.get("/", controller.get);

@@ -10,7 +10,7 @@ const { paginate } = require("../utils/helper");
 /* Get Articles*/
 exports.get = async (req, res, next) => {
   try {
-    const searchParams = req.query;
+    const searchParams = new URLSearchParams(req.query);
     const useCursor = searchParams.has("cursor");
 
     const result = await paginate(
@@ -52,9 +52,6 @@ exports.getOne = async (req, res, next) => {
 /* Create Article*/
 exports.post = async (req, res, next) => {
   try {
-    if (!req.admin)
-      return next({ status: 403, message: "Forbidden" });
-
     const parsed = createArticleSchema.safeParse(req.body);
     if (!parsed.success)
       return next({
@@ -91,9 +88,6 @@ exports.post = async (req, res, next) => {
 /* Update Article*/
 exports.patch = async (req, res, next) => {
   try {
-    if (!req.admin)
-      return next({ status: 403, message: "Forbidden" });
-
     const idParsed = idParamSchema.safeParse(req.params);
     if (!idParsed.success)
       return next({ status: 422, message: "Invalid ID" });
@@ -136,9 +130,6 @@ exports.patch = async (req, res, next) => {
 /* Delete Article*/
 exports.remove = async (req, res, next) => {
   try {
-    if (!req.admin)
-      return next({ status: 403, message: "Forbidden" });
-
     const parsed = idParamSchema.safeParse(req.params);
     if (!parsed.success)
       return next({ status: 422, message: "Invalid ID" });

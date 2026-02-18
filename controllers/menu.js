@@ -29,9 +29,6 @@ exports.getOne = async (req, res, next) => {
 // Create Menu// 
 exports.post = async (req, res, next) => {
     try {
-        if (!req.admin)
-            return next({ status: 403, message: "Forbidden" });
-
         const parsed = createMenuSchema.safeParse(req.body);
         if (!parsed.success)
             return res.status(422).json({ message: parsed.error.issues });
@@ -46,9 +43,6 @@ exports.post = async (req, res, next) => {
 //  Update Menu// 
 exports.patch = async (req, res, next) => {
     try {
-        if (!req.admin)
-            return next({ status: 403, message: "Forbidden" });
-
         const parsedId = menuIdParamSchema.safeParse(req.params);
         if (!parsedId.success)
             return next({ status: 422, message: "Invalid ID" });
@@ -74,8 +68,6 @@ exports.patch = async (req, res, next) => {
 
 // Delete Menu// 
 exports.remove = async (req, res, next) => {
-    if (!req.admin)
-        return next({ status: 403, message: "Forbidden" });
     try {
         const parsedId = menuIdParamSchema.safeParse(req.params);
         if (!parsedId.success)
