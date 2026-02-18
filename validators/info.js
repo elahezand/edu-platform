@@ -1,6 +1,6 @@
 const { z } = require("zod");
 
-/* ========= Helpers ========= */
+/*  Helpers  */
 
 const phoneSchema = z
   .string()
@@ -20,7 +20,7 @@ const urlOptional = z
   .optional()
   .or(z.literal(""));
 
-/* ========= Create ========= */
+/*  Create  */
 
 const createInfoSchema = z.object({
   phone: phoneSchema,
@@ -38,15 +38,13 @@ const createInfoSchema = z.object({
     .optional(),
 });
 
-/* ========= Update ========= */
+/*  Update  */
 
 const updateInfoSchema = z.object({
   phone: phoneSchema.optional(),
   email: emailSchema.optional(),
-  logo: z.string().trim().min(1).optional(),
-
+  logo: z.string().trim().min(1, "Logo is required").optional(),
   address: z.string().trim().optional().or(z.literal("")),
-
   socials: z
     .object({
       instagram: urlOptional,
@@ -55,15 +53,7 @@ const updateInfoSchema = z.object({
     })
     .optional(),
 });
-
-/* ========= Params ========= */
-
-const infoIdParamSchema = z.object({
-  id: z.string().min(1, "ID is required"),
-});
-
 module.exports = {
   createInfoSchema,
   updateInfoSchema,
-  infoIdParamSchema,
 };

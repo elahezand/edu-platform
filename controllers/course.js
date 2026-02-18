@@ -105,10 +105,7 @@ exports.getRelated = async (req, res, next) => {
 /*Get One Course*/
 exports.getOne = async (req, res, next) => {
   try {
-    const parsed = courseIdParamSchema.safeParse(req.params);
-    if (!parsed.success) return next({ status: 422, message: "Invalid ID" });
-
-    const course = await courseModel.findById(parsed.data.id)
+    const course = await courseModel.findById(req.params.id)
       .populate("instructor", "name")
       .populate("category", "title")
       .lean();
@@ -178,10 +175,6 @@ exports.post = async (req, res, next) => {
 /* Update Course*/
 exports.patch = async (req, res, next) => {
   try {
-    const idParsed = courseIdParamSchema.safeParse(req.params);
-    if (!idParsed.success)
-      return next({ status: 422, message: "Invalid ID" });
-
     const courseData = {
       ...req.body,
       price: Number(req.body.price),
@@ -194,13 +187,13 @@ exports.patch = async (req, res, next) => {
       return next({ status: 422, message: "Invalid data", errors: parsed.error.issues });
 
 
-    const course = await courseModel.findById(idParsed.data.id);
+    const course = await courseModel.findById(req.params.id);
     if (!course) return next({ status: 404, message: "Course not found" });
 
     const coverImage = req.file ? `/course/covers/${req.file.filename}` : course.coverImage;
 
     const updated = await courseModel.findByIdAndUpdate(
-      idParsed.data.id,
+      req.params.id,
       { $set: { ...parsed.data, coverImage } },
       { new: true }
     );
@@ -215,10 +208,7 @@ exports.patch = async (req, res, next) => {
 /* Delete Course */
 exports.remove = async (req, res, next) => {
   try {
-    const parsed = courseIdParamSchema.safeParse(req.params);
-    if (!parsed.success) return next({ status: 422, message: "Invalid ID" });
-
-    const deleted = await courseModel.findByIdAndDelete(parsed.data.id);
+    const deleted = await courseModel.findByIdAndDelete(req.params.id);
     if (!deleted) return next({ status: 404, message: "Course not found" });
 
     res.status(200).json({ message: "Course deleted successfully" });

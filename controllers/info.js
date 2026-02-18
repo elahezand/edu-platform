@@ -2,7 +2,6 @@ const infoModel = require("../models/info");
 const {
     createInfoSchema,
     updateInfoSchema,
-    infoIdParamSchema,
 } = require("../validators/info");
 
 /* Get Info (Public)*/
@@ -37,16 +36,13 @@ exports.post = async (req, res, next) => {
 /*  Update Singleton*/
 exports.patch = async (req, res, next) => {
     try {
-        const parsedId = infoIdParamSchema.safeParse(req.params);
-        if (!parsedId.success)
-            return next({ status: 422, message: "Invalid ID" });
 
         const parsed = updateInfoSchema.safeParse(req.body);
         if (!parsed.success)
             return next({ status: 422, message: parsed.error.message });
 
         const info = await infoModel.findOneAndUpdate(
-            {},
+            req.params.id,
             { $set: parsed.data },
             { new: true, upsert: true }
         );
@@ -60,11 +56,7 @@ exports.patch = async (req, res, next) => {
 /*  Delete*/
 exports.remove = async (req, res, next) => {
     try {
-        const parsed = infoIdParamSchema.safeParse(req.params);
-        if (!parsed.success)
-            return next({ status: 422, message: "Invalid ID" });
-
-        const deleted = await infoModel.findByIdAndDelete(parsed.data.id);
+        const deleted = await infoModel.findByIdAndDelete(req.params.id);
         if (!deleted)
             return next({ status: 404, message: "Info not found" });
 

@@ -1,13 +1,12 @@
 const { z } = require("zod");
-const { isValidObjectId } = require("mongoose");
+const mongoose = require("mongoose");
 
-/* ---------- helpers ---------- */
-const objectId = (field) =>
-  z.string().refine(val => isValidObjectId(val), {
+const objectId = (field = "ID") =>
+  z.string().trim().refine(val => mongoose.Types.ObjectId.isValid(val), {
     message: `Invalid ${field} ID`,
   });
 
-/* ---------- Create Comment (User) ---------- */
+/*  Create Comment (User)  */
 const createCommentSchema = z.object({
   course: objectId("course"),
   score: z.number()
@@ -20,7 +19,7 @@ const createCommentSchema = z.object({
     .max(1000, "Comment cannot exceed 1000 characters"),
 });
 
-/* ---------- Answer Comment (Admin) ---------- */
+/*  Answer Comment (Admin)  */
 const answerCommentSchema = z.object({
   text: z.string()
     .trim()
@@ -28,7 +27,7 @@ const answerCommentSchema = z.object({
     .max(1000, "Answer is too long"),
 });
 
-/* ---------- Update Comment Body (Admin) ---------- */
+/*  Update Comment Body (Admin)  */
 const updateCommentSchema = z.object({
   body: z.string()
     .trim()
@@ -36,14 +35,8 @@ const updateCommentSchema = z.object({
     .max(1000, "Comment cannot exceed 1000 characters"),
 });
 
-/* ---------- ID Param ---------- */
-const commentIdParamSchema = z.object({
-  id: objectId("comment"),
-});
-
 module.exports = {
   createCommentSchema,
   answerCommentSchema,
   updateCommentSchema,
-  commentIdParamSchema,
 };

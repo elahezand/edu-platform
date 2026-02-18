@@ -1,13 +1,6 @@
 const { z } = require("zod");
-const { isValidObjectId } = require("mongoose");
 
-/* ---------- helper ---------- */
-const objectId = (field) =>
-  z.string().refine(val => isValidObjectId(val), {
-    message: `Invalid ${field} ID`
-  });
-
-/* ---------- Create User ---------- */
+/*  Create User  */
 const createUserSchema = z.object({
   username: z
     .string()
@@ -41,7 +34,7 @@ const createUserSchema = z.object({
   }
 });
 
-/* ---------- Update User ---------- */
+/*  Update User  */
 const updateUserSchema = z.object({
   username: z
     .string()
@@ -78,14 +71,9 @@ const updateUserSchema = z.object({
   }
 });
 
-/* ---------- ID Param ---------- */
-const userIdParamSchema = z.object({
-  id: objectId("user")
-});
 
-/* ---------- export ---------- */
+/*  export  */
 module.exports = {
   createUserSchema,
   updateUserSchema,
-  userIdParamSchema
 };
