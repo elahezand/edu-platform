@@ -2,7 +2,6 @@ const articleModel = require("../models/article");
 const {
   createArticleSchema,
   updateArticleSchema,
-  idParamSchema
 } = require("../validators/article");
 
 const { paginate } = require("../utils/helper");
@@ -31,12 +30,8 @@ exports.get = async (req, res, next) => {
 /*   Get One Article*/
 exports.getOne = async (req, res, next) => {
   try {
-    const parsed = idParamSchema.safeParse(req.params);
-    if (!parsed.success)
-      return next({ status: 422, message: "Invalid ID" });
-
     const article = await articleModel
-      .findById(parsed.data.id)
+      .findById(req.params.id)
       .populate("creator")
       .lean();
 
@@ -88,9 +83,6 @@ exports.post = async (req, res, next) => {
 /* Update Article*/
 exports.patch = async (req, res, next) => {
   try {
-    const idParsed = idParamSchema.safeParse(req.params);
-    if (!idParsed.success)
-      return next({ status: 422, message: "Invalid ID" });
 
     const bodyParsed = updateArticleSchema.safeParse(req.body);
     if (!bodyParsed.success)
@@ -100,7 +92,7 @@ exports.patch = async (req, res, next) => {
         errors: bodyParsed.error.issues
       });
 
-    const article = await articleModel.findById(idParsed.data.id);
+    const article = await articleModel.findById(req.params.id);
     if (!article)
       return next({ status: 404, message: "Article not found" });
 
@@ -112,7 +104,7 @@ exports.patch = async (req, res, next) => {
       updateData.cover = `/articles/covers/${req.file.filename}`;
 
     const updated = await articleModel.findByIdAndUpdate(
-      idParsed.data.id,
+      req.params.id,
       { $set: updateData },
       { new: true }
     );
@@ -130,11 +122,7 @@ exports.patch = async (req, res, next) => {
 /* Delete Article*/
 exports.remove = async (req, res, next) => {
   try {
-    const parsed = idParamSchema.safeParse(req.params);
-    if (!parsed.success)
-      return next({ status: 422, message: "Invalid ID" });
-
-    const deleted = await articleModel.findByIdAndDelete(parsed.data.id);
+    const deleted = await articleModel.findByIdAndDelete(req.params.id);
     if (!deleted)
       return next({ status: 404, message: "Article not found" });
 

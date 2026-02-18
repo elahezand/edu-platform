@@ -2,7 +2,6 @@ const categoryModel = require("../models/category");
 const {
   createCategorySchema,
   updateCategorySchema,
-  categoryIdParamSchema,
 } = require("../validators/category");
 
 const { paginate } = require("../utils/helper");
@@ -32,7 +31,7 @@ exports.get = async (req, res, next) => {
 /* Create Category*/
 exports.post = async (req, res, next) => {
   try {
-  
+
     const parsed = createCategorySchema.safeParse(req.body);
     if (!parsed.success)
       return next({
@@ -60,13 +59,6 @@ exports.post = async (req, res, next) => {
 /* Update Category*/
 exports.patch = async (req, res, next) => {
   try {
-    if (!req.admin)
-      return next({ status: 403, message: "Forbidden" });
-
-    const paramParsed = categoryIdParamSchema.safeParse(req.params);
-    if (!paramParsed.success)
-      return next({ status: 422, message: "Invalid ID" });
-
     const bodyParsed = updateCategorySchema.safeParse(req.body);
     if (!bodyParsed.success)
       return next({
@@ -78,14 +70,14 @@ exports.patch = async (req, res, next) => {
     if (bodyParsed.data.name) {
       const exists = await categoryModel.findOne({
         name: bodyParsed.data.name,
-        _id: { $ne: paramParsed.data.id }
+        _id: { $ne: req.params.id }
       });
       if (exists)
         return next({ status: 409, message: "Category name already exists" });
     }
 
     const updated = await categoryModel.findByIdAndUpdate(
-      paramParsed.data.id,
+      req.params.id,
       { $set: bodyParsed.data },
       { new: true }
     );
@@ -106,11 +98,7 @@ exports.patch = async (req, res, next) => {
 /* Delete Category*/
 exports.remove = async (req, res, next) => {
   try {
-    const parsed = categoryIdParamSchema.safeParse(req.params);
-    if (!parsed.success)
-      return next({ status: 422, message: "Invalid ID" });
-
-    const deleted = await categoryModel.findByIdAndDelete(parsed.data.id);
+    const deleted = await categoryModel.findByIdAndDelete(req.params.id);
 
     if (!deleted)
       return next({ status: 404, message: "Category not found" });

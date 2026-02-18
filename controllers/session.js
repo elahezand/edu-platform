@@ -3,7 +3,6 @@ const courseModel = require("../models/course");
 const {
   createSessionSchema,
   updateSessionSchema,
-  sessionIdParamSchema
 } = require("../validators/session");
 const { paginate } = require("../utils/helper");
 
@@ -32,11 +31,7 @@ exports.get = async (req, res, next) => {
 /*  Get One Session  */
 exports.getOne = async (req, res, next) => {
   try {
-    const parsed = sessionIdParamSchema.safeParse(req.params);
-    if (!parsed.success)
-      return next({ status: 422, message: "Invalid ID" });
-
-    const session = await sessionModel.findById(parsed.data.id).lean();
+    const session = await sessionModel.findById(req.params.id).lean();
     if (!session)
       return next({ status: 404, message: "Session not found" });
 
@@ -86,10 +81,6 @@ exports.post = async (req, res, next) => {
 /*  Update Session (Admin)  */
 exports.patch = async (req, res, next) => {
   try {
-    const idParsed = sessionIdParamSchema.safeParse(req.params);
-    if (!idParsed.success)
-      return next({ status: 422, message: "Invalid ID" });
-
     const parsed = updateSessionSchema.safeParse(req.body);
     if (!parsed.success)
       return next({
@@ -98,7 +89,7 @@ exports.patch = async (req, res, next) => {
         errors: parsed.error.issues
       });
 
-    const session = await sessionModel.findById(idParsed.data.id);
+    const session = await sessionModel.findById(req.params.id);
     if (!session)
       return next({ status: 404, message: "Session not found" });
 
@@ -107,7 +98,7 @@ exports.patch = async (req, res, next) => {
       : session.videoUrl;
 
     const updated = await sessionModel.findByIdAndUpdate(
-      idParsed.data.id,
+      req.params.id,
       { $set: { ...parsed.data, videoUrl } },
       { new: true }
     );
@@ -125,11 +116,7 @@ exports.patch = async (req, res, next) => {
 /*  Delete Session (Admin)  */
 exports.remove = async (req, res, next) => {
   try {
-    const parsed = sessionIdParamSchema.safeParse(req.params);
-    if (!parsed.success)
-      return next({ status: 422, message: "Invalid ID" });
-
-    const deleted = await sessionModel.findByIdAndDelete(parsed.data.id);
+    const deleted = await sessionModel.findByIdAndDelete(req.params.id);
     if (!deleted)
       return next({ status: 404, message: "Session not found" });
 

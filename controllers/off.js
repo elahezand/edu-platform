@@ -1,10 +1,9 @@
 const offModel = require("../models/off");
-const { offIdParamSchema, createOffSchema, updateOffSchema } = require("../validators/off");
+const { createOffSchema, updateOffSchema } = require("../validators/off");
 
 /* Get All Offs*/
 exports.getAll = async (req, res, next) => {
   try {
-
     const searchParams = new URLSearchParams(req.query);
     const useCursor = searchParams.has("cursor");
 
@@ -28,10 +27,7 @@ exports.getAll = async (req, res, next) => {
  */
 exports.getOne = async (req, res, next) => {
   try {
-    const parsed = offIdParamSchema.safeParse(req.params);
-    if (!parsed.success) return next({ status: 422, message: "Invalid ID" });
-
-    const off = await offModel.findById(parsed.data.id)
+    const off = await offModel.findById(req.params.id)
       .populate("course", "title")
       .populate("creator", "name")
       .lean();
@@ -67,15 +63,12 @@ exports.post = async (req, res, next) => {
  */
 exports.patch = async (req, res, next) => {
   try {
-    const idParsed = offIdParamSchema.safeParse(req.params);
-    if (!idParsed.success) return next({ status: 422, message: "Invalid ID" });
-
     const parsed = updateOffSchema.safeParse(req.body);
     if (!parsed.success)
       return next({ status: 422, message: "Invalid data", errors: parsed.error.issues });
 
     const updatedOff = await offModel.findByIdAndUpdate(
-      idParsed.data.id,
+      req.params.id,
       parsed.data,
       { new: true }
     );
@@ -91,10 +84,7 @@ exports.patch = async (req, res, next) => {
 /*   Delete Off*/
 exports.remove = async (req, res, next) => {
   try {
-    const parsed = offIdParamSchema.safeParse(req.params);
-    if (!parsed.success) return next({ status: 422, message: "Invalid ID" });
-
-    const deleted = await offModel.findByIdAndDelete(parsed.data.id);
+    const deleted = await offModel.findByIdAndDelete(req.params.id);
     if (!deleted) return next({ status: 404, message: "Off not found" });
 
     res.status(200).json({ message: "Off deleted successfully" });

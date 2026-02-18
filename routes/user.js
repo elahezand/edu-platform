@@ -11,13 +11,25 @@ const {
 
 const { authAdmin, authUser } = require("../middlewares/authMiddleware");
 const upload = require("../utils/multer");
+const validateObjectIdParam = require("../middlewares/objectId")
+
 
 
 userRouter.get("/", authAdmin, get);
 userRouter.post("/", authAdmin, post);
-userRouter.put("/:id", authUser, upload.single("avatar"), put);
-userRouter.delete("/:id", authAdmin, remove);
 userRouter.post("/ban", authAdmin, ban);
-userRouter.patch("/role/:id", authAdmin, toggleRole);
+
+userRouter.put("/:id", authUser,
+  validateObjectIdParam("id"),
+  upload.single("avatar"), put);
+
+userRouter.delete("/:id", authAdmin,
+  validateObjectIdParam("id"),
+  remove);
+
+
+userRouter.patch("/role/:id", authAdmin,
+  validateObjectIdParam("id"),
+  toggleRole);
 
 module.exports = userRouter;

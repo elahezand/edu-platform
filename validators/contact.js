@@ -1,13 +1,5 @@
 const { z } = require("zod");
-const { isValidObjectId } = require("mongoose");
-
-/* ---------- helpers ---------- */
-const objectId = (field) =>
-  z.string().refine(val => isValidObjectId(val), {
-    message: `Invalid ${field} ID`,
-  });
-
-/* ---------- Create Contact ---------- */
+/*  Create Contact  */
 const createContactSchema = z.object({
   name: z.string()
     .trim()
@@ -29,13 +21,8 @@ const createContactSchema = z.object({
 });
 
 
-/* ---------- ID Param ---------- */
-const contactIdParamSchema = z.object({
-  id: objectId("contact"),
-});
 
-/* ---------- export ---------- */
+/*  export  */
 module.exports = {
   createContactSchema,
-  contactIdParamSchema,
 };

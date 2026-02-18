@@ -6,7 +6,6 @@ const schema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      match: [/^(\+?\d{10,15})$/, "Invalid phone number"],
     },
 
     email: {
@@ -14,7 +13,6 @@ const schema = new mongoose.Schema(
       required: true,
       trim: true,
       lowercase: true,
-      match: [/^\S+@\S+\.\S+$/, "Invalid email address"],
     },
 
     logo: {

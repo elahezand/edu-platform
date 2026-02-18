@@ -15,12 +15,8 @@ const updateDepartmentSchema = z.object({
   title: z.string().min(2).optional(),
 });
 
-const departmentIdParamSchema = z.object({
-  id: objectId,
-});
 
 module.exports = {
   createDepartmentSchema,
   updateDepartmentSchema,
-  departmentIdParamSchema,
 };

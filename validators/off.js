@@ -1,12 +1,4 @@
 const { z } = require("zod");
-const { isValidObjectId } = require("mongoose");
-
-/* ---------- helper ---------- */
-const objectId = (field) =>
-  z.string().refine(val => isValidObjectId(val), {
-    message: `Invalid ${field} ID`
-  });
-
 
 const createOffSchema = z.object({
   code: z.string().min(1, "Discount code is required"),
@@ -25,21 +17,11 @@ const createOffSchema = z.object({
   creator: z.string().min(1, "Creator ID is required"),
 });
 
-const updateOffSchema = z.object({
-  code: z.string().min(1).optional(),
-  percent: z.number().min(0).max(100).optional(),
-  course: z.string().optional(),
-  max: z.number().min(1).optional(),
-  uses: z.number().min(0).optional(),
-  creator: z.string().optional(),
-});
+const updateOffSchema = createOffSchema.partial()
 
-const offIdParamSchema = z.object({
-  id: objectId("off")
-});
+
 
 module.exports = {
   createOffSchema,
   updateOffSchema,
-  offIdParamSchema,
 };

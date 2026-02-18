@@ -1,12 +1,10 @@
 const { z } = require("zod");
-const { isValidObjectId } = require("mongoose");
+const mongoose = require("mongoose");
 
-/*  helpers  */
-const objectId = (field) =>
-  z.string().refine(val => isValidObjectId(val), {
+const objectId = (field = "ID") =>
+  z.string().trim().refine(val => mongoose.Types.ObjectId.isValid(val), {
     message: `Invalid ${field} ID`,
   });
-
 /*  Create Course Schema  */
 const createCourseSchema = z.object({
   title: z.string().trim().min(3).max(200),
@@ -24,13 +22,7 @@ const createCourseSchema = z.object({
 /*  Update Course Schema  */
 const updateCourseSchema = createCourseSchema.partial();
 
-/*  ID Param  */
-const courseIdParamSchema = z.object({
-  id: objectId("course")
-});
-
 module.exports = {
   createCourseSchema,
   updateCourseSchema,
-  courseIdParamSchema
 };

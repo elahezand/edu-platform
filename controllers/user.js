@@ -1,5 +1,4 @@
-const { isValidObjectId } = require("mongoose");
-const { createUserSchema, updateUserSchema, userIdParamSchema } = require("../validators/user");
+const { createUserSchema, updateUserSchema } = require("../validators/user");
 const UserModel = require("../models/user");
 const BanModel = require("../models/ban");
 const { paginate } = require("../utils/helper");
@@ -78,14 +77,12 @@ exports.post = async (req, res, next) => {
 /* Update User (Admin/User)*/
 exports.put = async (req, res, next) => {
     try {
-        const parsedId = userIdParamSchema.safeParse(req.params);
-        if (!parsedId.success) return next({ status: 422, message: "Invalid User ID" });
-
         const parsedBody = updateUserSchema.safeParse(req.body);
         if (!parsedBody.success) return next({ status: 422, message: "Invalid data", errors: parsedBody.error.issues });
 
         const { password, newPassword, confirmPassword, ...rest } = parsedBody.data;
-        const user = await UserModel.findById(parsedId.data.id);
+        const user = await UserModel.findById(req.params.id
+        );
         if (!user) return next({ status: 404, message: "User not found" });
 
         // Verify current password if changing password
@@ -103,7 +100,8 @@ exports.put = async (req, res, next) => {
             rest.avatar = `/users/avatars/${req.file.filename}`;
         }
 
-        const updatedUser = await UserModel.findByIdAndUpdate(parsedId.data.id, { $set: rest }, { new: true });
+        const updatedUser = await UserModel.findByIdAndUpdate(req.params.id
+            , { $set: rest }, { new: true });
         const userObj = updatedUser.toObject();
         delete userObj.password;
         delete userObj.refreshToken;
@@ -117,10 +115,7 @@ exports.put = async (req, res, next) => {
 /* Delete User (Admin)*/
 exports.remove = async (req, res, next) => {
     try {
-        const parsedId = userIdParamSchema.safeParse(req.params);
-        if (!parsedId.success) return next({ status: 422, message: "Invalid User ID" });
-
-        await UserModel.findByIdAndDelete(parsedId.data.id);
+        await UserModel.findByIdAndDelete(req.params.id);
 
         res.status(200).json({ message: "User removed successfully" });
     } catch (err) {
@@ -162,10 +157,8 @@ exports.ban = async (req, res, next) => {
 /* Toggle Role (Admin)*/
 exports.toggleRole = async (req, res, next) => {
     try {
-        const parsedId = userIdParamSchema.safeParse(req.params);
-        if (!parsedId.success) return next({ status: 422, message: "Invalid User ID" });
-
-        const user = await UserModel.findById(parsedId.data.id);
+        const user = await UserModel.findById(req.params.id
+        );
         if (!user) return next({ status: 404, message: "User not found" });
 
         user.role = user.role === "USER" ? "ADMIN" : "USER";

@@ -1,5 +1,5 @@
 const menuModel = require("../models/menu");
-const { menuIdParamSchema, updateMenuSchema, createMenuSchema } = require("../validators/menu");
+const {updateMenuSchema, createMenuSchema } = require("../validators/menu");
 // Get All Menus// 
 exports.get = async (req, res, next) => {
     try {
@@ -13,10 +13,6 @@ exports.get = async (req, res, next) => {
 //  Get One Menu// 
 exports.getOne = async (req, res, next) => {
     try {
-        const parsedId = menuIdParamSchema.safeParse(req.params);
-        if (!parsedId.success)
-            return next({ status: 422, message: "Invalid ID" });
-
         const menu = await menuModel.findById(req.params.id).lean();
         if (!menu) return res.status(404).json({ message: "Menu not found" });
 
@@ -43,10 +39,6 @@ exports.post = async (req, res, next) => {
 //  Update Menu// 
 exports.patch = async (req, res, next) => {
     try {
-        const parsedId = menuIdParamSchema.safeParse(req.params);
-        if (!parsedId.success)
-            return next({ status: 422, message: "Invalid ID" });
-
         const parsed = updateMenuSchema.safeParse(req.body);
         if (!parsed.success)
             return res.status(422).json({ message: parsed.error.issues });
@@ -69,11 +61,6 @@ exports.patch = async (req, res, next) => {
 // Delete Menu// 
 exports.remove = async (req, res, next) => {
     try {
-        const parsedId = menuIdParamSchema.safeParse(req.params);
-        if (!parsedId.success)
-            return next({ status: 422, message: "Invalid ID" });
-
-
         const deletedMenu = await menuModel.findByIdAndDelete(req.params.id);
         if (!deletedMenu)
             return res.status(404).json({ message: "Menu not found" });

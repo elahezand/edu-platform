@@ -4,7 +4,6 @@ const {
   createCommentSchema,
   answerCommentSchema,
   updateCommentSchema,
-  commentIdParamSchema,
 } = require("../validators/comment");
 
 const { paginate } = require("../utils/helper");
@@ -61,11 +60,6 @@ exports.post = async (req, res, next) => {
 /* Answer Comment (Admin)*/
 exports.answer = async (req, res, next) => {
   try {
-
-    const paramParsed = commentIdParamSchema.safeParse(req.params);
-    if (!paramParsed.success)
-      return next({ status: 422, message: "Invalid ID" });
-
     const bodyParsed = answerCommentSchema.safeParse(req.body);
     if (!bodyParsed.success)
       return next({
@@ -75,7 +69,7 @@ exports.answer = async (req, res, next) => {
       });
 
     const updated = await commentModel.findByIdAndUpdate(
-      paramParsed.data.id,
+      req.params.id,
       {
         $push: {
           answers: {
@@ -100,11 +94,7 @@ exports.answer = async (req, res, next) => {
 /* Accept Comment (Admin)*/
 exports.accept = async (req, res, next) => {
   try {
-    const parsed = commentIdParamSchema.safeParse(req.params);
-    if (!parsed.success)
-      return next({ status: 422, message: "Invalid ID" });
-
-    const comment = await commentModel.findById(parsed.data.id);
+    const comment = await commentModel.findById(req.params.id);
     if (!comment)
       return next({ status: 404, message: "Comment not found" });
 
@@ -120,10 +110,6 @@ exports.accept = async (req, res, next) => {
 /* Update Comment (Admin)*/
 exports.patch = async (req, res, next) => {
   try {
-    const paramParsed = commentIdParamSchema.safeParse(req.params);
-    if (!paramParsed.success)
-      return next({ status: 422, message: "Invalid ID" });
-
     const bodyParsed = updateCommentSchema.safeParse(req.body);
     if (!bodyParsed.success)
       return next({
@@ -133,7 +119,7 @@ exports.patch = async (req, res, next) => {
       });
 
     const updated = await commentModel.findByIdAndUpdate(
-      paramParsed.data.id,
+      req.params.id,
       { $set: { body: bodyParsed.data.body } },
       { new: true }
     );
@@ -150,11 +136,7 @@ exports.patch = async (req, res, next) => {
 /* Delete Comment (Admin)*/
 exports.remove = async (req, res, next) => {
   try {
-    const parsed = commentIdParamSchema.safeParse(req.params);
-    if (!parsed.success)
-      return next({ status: 422, message: "Invalid ID" });
-
-    const deleted = await commentModel.findByIdAndDelete(parsed.data.id);
+    const deleted = await commentModel.findByIdAndDelete(req.params.id);
     if (!deleted)
       return next({ status: 404, message: "Comment not found" });
 

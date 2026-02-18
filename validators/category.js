@@ -1,13 +1,6 @@
 const { z } = require("zod");
-const { isValidObjectId } = require("mongoose");
 
-/* ---------- helpers ---------- */
-const objectId = (field) =>
-  z.string().refine(val => isValidObjectId(val), {
-    message: `Invalid ${field} ID`,
-  });
-
-/* ---------- base fields ---------- */
+/*  base fields  */
 const title = z
   .string({
     required_error: "Title is required",
@@ -28,29 +21,15 @@ const name = z
   .max(100, "Name is too long")
   .regex(/^[a-z0-9-]+$/, "Name must be slug format (a-z, 0-9, -)");
 
-/* ---------- create ---------- */
+/*  create  */
 const createCategorySchema = z.object({
   title,
   name,
 });
 
-/* ---------- update ---------- */
-const updateCategorySchema = z
-  .object({
-    title: title.optional(),
-    name: name.optional(),
-  })
-  .refine(data => Object.keys(data).length > 0, {
-    message: "At least one field must be provided",
-  });
-
-/* ---------- params ---------- */
-const categoryIdParamSchema = z.object({
-  id: objectId("category"),
-});
-
+/*  update  */
+const updateCategorySchema = createCategorySchema.partial()
 module.exports = {
   createCategorySchema,
   updateCategorySchema,
-  categoryIdParamSchema,
 };

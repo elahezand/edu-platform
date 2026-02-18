@@ -3,7 +3,6 @@ const departmentModel = require("../models/department");
 const {
     createDepartmentSchema,
     updateDepartmentSchema,
-    departmentIdParamSchema,
 } = require("../validators/department");
 
 /* Get All (with parent)*/
@@ -23,12 +22,8 @@ exports.get = async (req, res, next) => {
 /* Get One (with parent + children)*/
 exports.getOne = async (req, res, next) => {
     try {
-        const parsed = departmentIdParamSchema.safeParse(req.params);
-        if (!parsed.success)
-            return next({ status: 422, message: "Invalid ID" });
-
         const department = await departmentModel
-            .findById(parsed.data.id)
+            .findById(req.params.id)
             .populate("parent")
             .lean();
 
@@ -70,11 +65,6 @@ exports.post = async (req, res, next) => {
 /* Update (title + parent)*/
 exports.patch = async (req, res, next) => {
     try {
-     
-        const parsedId = departmentIdParamSchema.safeParse(req.params);
-        if (!parsedId.success)
-            return next({ status: 422, message: "Invalid ID" });
-
         const parsed = updateDepartmentSchema.safeParse({
             id: req.params.id,
             ...req.body,
@@ -84,7 +74,7 @@ exports.patch = async (req, res, next) => {
             return next({ status: 422, message: parsed.error.message });
 
         const department = await departmentModel.findByIdAndUpdate(
-            parsed.data.id,
+            req.params.id,
             {
                 title: parsed.data.title,
                 parent: parsed.data.parent ?? null,
@@ -105,12 +95,8 @@ exports.patch = async (req, res, next) => {
 /*Delete (prevent if has children)*/
 exports.remove = async (req, res, next) => {
     try {
-        const parsed = departmentIdParamSchema.safeParse(req.params);
-        if (!parsed.success)
-            return next({ status: 422, message: "Invalid ID" });
-
         const hasChildren = await departmentModel.exists({
-            parent: parsed.data.id,
+            parent: req.params.id,
         });
 
         if (hasChildren)
@@ -119,7 +105,7 @@ exports.remove = async (req, res, next) => {
                 message: "Cannot delete department with sub-departments",
             });
 
-        const department = await departmentModel.findByIdAndDelete(parsed.data.id);
+        const department = await departmentModel.findByIdAndDelete(req.params.id);
 
         if (!department)
             return next({ status: 404, message: "Department not found" });

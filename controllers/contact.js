@@ -1,7 +1,6 @@
 const contactModel = require("../models/contact");
 const {
   createContactSchema,
-  contactIdParamSchema,
 } = require("../validators/contact");
 const { paginate } = require("../utils/helper");
 
@@ -31,11 +30,7 @@ exports.get = async (req, res, next) => {
 /* Get One Contact (Admin)*/
 exports.getOne = async (req, res, next) => {
   try {
-    const parsed = contactIdParamSchema.safeParse(req.params);
-    if (!parsed.success)
-      return next({ status: 422, message: "Invalid ID" });
-
-    const contact = await contactModel.findById(parsed.data.id);
+    const contact = await contactModel.findById(req.params.id);
     if (!contact)
       return next({ status: 404, message: "Contact not found" });
 
@@ -72,11 +67,7 @@ exports.post = async (req, res, next) => {
 /*  Delete Contact (Admin)*/
 exports.remove = async (req, res, next) => {
   try {
-    const parsed = contactIdParamSchema.safeParse(req.params);
-    if (!parsed.success)
-      return next({ status: 422, message: "Invalid ID" });
-
-    const deleted = await contactModel.findByIdAndDelete(parsed.data.id);
+    const deleted = await contactModel.findByIdAndDelete(req.params.id);
     if (!deleted)
       return next({ status: 404, message: "Contact not found" });
 
