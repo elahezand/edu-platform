@@ -14,9 +14,7 @@ const cookieOptions = {
 /*  Get Users (Admin)*/
 exports.get = async (req, res, next) => {
     try {
-        if (!req.admin) return next({ status: 403, message: "Forbidden" });
-
-        const searchParams = req.query;
+        const searchParams = new URLSearchParams(req.query);
         const useCursor = searchParams.has("cursor");
 
         const result = await paginate(UserModel, searchParams, {}, "comments", useCursor, true);
@@ -30,8 +28,6 @@ exports.get = async (req, res, next) => {
 /* Create User (Admin)*/
 exports.post = async (req, res, next) => {
     try {
-        if (!req.admin) return next({ status: 403, message: "Forbidden" });
-
         const parsed = createUserSchema.safeParse(req.body);
         if (!parsed.success) {
             return next({ status: 422, message: "Invalid data", errors: parsed.error.issues });
@@ -121,8 +117,6 @@ exports.put = async (req, res, next) => {
 /* Delete User (Admin)*/
 exports.remove = async (req, res, next) => {
     try {
-        if (!req.admin) return next({ status: 403, message: "Forbidden" });
-
         const parsedId = userIdParamSchema.safeParse(req.params);
         if (!parsedId.success) return next({ status: 422, message: "Invalid User ID" });
 
@@ -136,41 +130,38 @@ exports.remove = async (req, res, next) => {
 
 /* Ban User (Admin)*/
 exports.ban = async (req, res, next) => {
-  try {
-    const userId = req.body.user ? String(req.body.user) : null;
-    const email = req.body.email ? String(req.body.email) : null;
-    const phone = req.body.phone ? String(req.body.phone) : null;
+    try {
+        const userId = req.body.user ? String(req.body.user) : null;
+        const email = req.body.email ? String(req.body.email) : null;
+        const phone = req.body.phone ? String(req.body.phone) : null;
 
-    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ message: "Invalid or missing User ID" });
+        if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ message: "Invalid or missing User ID" });
+        }
+        const exists = await BanModel.findOne({ user: userId }).lean();
+        if (!exists) {
+            await BanModel.create({
+                user: userId,
+                email,
+                phone
+            });
+        }
+        await UserModel.findOneAndDelete({
+            $or: [
+                { _id: userId },
+                { phone: phone }
+            ]
+        });
+
+        return res.status(200).json({ message: "User banned successfully" });
+    } catch (err) {
+        next(err);
     }
-    const exists = await BanModel.findOne({ user: userId }).lean();
-
-    if (!exists) {
-      await BanModel.create({ 
-        user: userId, 
-        email, 
-        phone 
-      });
-    }
-    await UserModel.findOneAndDelete({
-      $or: [
-        { _id: userId },
-        { phone: phone }
-      ]
-    });
-
-    return res.status(200).json({ message: "User banned successfully" });
-  } catch (err) {
-    next(err);
-  }
 };
 
 /* Toggle Role (Admin)*/
 exports.toggleRole = async (req, res, next) => {
     try {
-        if (!req.admin) return next({ status: 403, message: "Forbidden" });
-
         const parsedId = userIdParamSchema.safeParse(req.params);
         if (!parsedId.success) return next({ status: 422, message: "Invalid User ID" });
 

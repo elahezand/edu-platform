@@ -1,7 +1,7 @@
 const express = require("express");
 const courseRouter = express.Router();
 const controller = require("../controllers/course");
-const upload = require("../middlewares/multer");
+const upload = require("../utils/multer");
 const { authAdmin, authUser } = require("../middlewares/authMiddleware");
 
 // Public Routes

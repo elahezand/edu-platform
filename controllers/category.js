@@ -10,7 +10,7 @@ const { paginate } = require("../utils/helper");
 /*  Get Categories*/
 exports.get = async (req, res, next) => {
   try {
-    const searchParams = req.query;
+    const searchParams = new URLSearchParams(req.query);
     const useCursor = searchParams.has("cursor");
 
     const result = await paginate(
@@ -32,9 +32,7 @@ exports.get = async (req, res, next) => {
 /* Create Category*/
 exports.post = async (req, res, next) => {
   try {
-    if (!req.admin)
-      return next({ status: 403, message: "Forbidden" });
-
+  
     const parsed = createCategorySchema.safeParse(req.body);
     if (!parsed.success)
       return next({
@@ -108,9 +106,6 @@ exports.patch = async (req, res, next) => {
 /* Delete Category*/
 exports.remove = async (req, res, next) => {
   try {
-    if (!req.admin)
-      return next({ status: 403, message: "Forbidden" });
-
     const parsed = categoryIdParamSchema.safeParse(req.params);
     if (!parsed.success)
       return next({ status: 422, message: "Invalid ID" });

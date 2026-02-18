@@ -12,7 +12,7 @@ const { paginate } = require("../utils/helper");
 /* Get All Courses */
 exports.getAll = async (req, res, next) => {
   try {
-    const searchParams = req.query;
+    const searchParams = new URLSearchParams(req.query);
     const useCursor = searchParams.has("cursor");
 
     const result = await paginate(
@@ -34,7 +34,7 @@ exports.getAll = async (req, res, next) => {
 /* Get Popular */
 exports.getPopular = async (req, res, next) => {
   try {
-    const searchParams = req.query;
+    const searchParams = new URLSearchParams(req.query);
     const useCursor = searchParams.has("cursor");
 
     const result = await paginate(
@@ -55,42 +55,48 @@ exports.getPopular = async (req, res, next) => {
 /*Get Courses By Category*/
 exports.getCategoryCourses = async (req, res, next) => {
   try {
-    const searchParams = req.query;
+    const searchParams = new URLSearchParams(req.query);
+    const useCursor = searchParams.has("cursor");;
     const { categoryName } = req.params;
 
-    if (typeof categoryName !== 'string') {
-      return next(err)({ status: 400, message: "Invalid category name" });
+    if (typeof categoryName !== 'string' || !categoryName) {
+      return next({ status: 400, message: "Invalid category name" });
     }
-    const category = await categoryModel.findOne({ name: categoryName });
+    const category = await categoryModel.findOne({ name: String(categoryName).trim() }).lean();
 
-    if (!category)
-      return res.json([]);
+    if (!category) return res.status(200).json([]);
 
     const result = await paginate(
       courseModel,
       searchParams,
-      { categoryID: category._id },
-      "creator categoryID",
+      { category: category._id },
+      "instructor category",
       useCursor,
       true
     );
     res.json(result);
-
   } catch (error) {
     next(error);
   }
 };
 
-/* Get Related Courses*/
+/* Get Related Courses */
 exports.getRelated = async (req, res, next) => {
   try {
     const { shortName } = req.params;
-    const course = await courseModel.findOne({ shortName: String(shortName) });
 
-    let relatedCourses = await courseModel.find({
-      categoryID: course.categoryID,
-    });
-    res.json(relatedCourses.splice(0, 4));
+    const course = await courseModel.findOne({ slug: String(shortName) }).lean();
+    if (!course) return res.status(404).json({ message: "Course not found" });
+
+    const relatedCourses = await courseModel
+      .find({
+        category: course.category,
+        _id: { $ne: course._id }
+      })
+      .limit(4)
+      .lean();
+
+    res.json(relatedCourses);
   } catch (error) {
     next(error);
   }
@@ -100,42 +106,39 @@ exports.getRelated = async (req, res, next) => {
 exports.getOne = async (req, res, next) => {
   try {
     const parsed = courseIdParamSchema.safeParse(req.params);
-    if (!parsed.success)
-      return next({ status: 422, message: "Invalid ID" });
+    if (!parsed.success) return next({ status: 422, message: "Invalid ID" });
 
     const course = await courseModel.findById(parsed.data.id)
-      .populate("creator")
-      .populate("categoryID")
+      .populate("instructor", "name")
+      .populate("category", "title")
       .lean();
 
-    if (!course)
-      return next({ status: 404, message: "Course not found" });
+    if (!course) return next({ status: 404, message: "Course not found" });
 
-    const courseRegisters = await courseUserModel.find({ course: course._id }).lean();
-    const courseComments = await commentModel.find({ course: course._id }).lean();
+    const [courseRegisters, courseComments] = await Promise.all([
+      courseUserModel.countDocuments({ course: course._id }),
+      commentModel.find({ course: course._id }).lean()
+    ]);
 
-    let courseTotalScore = 5;
-    courseComments.forEach(comment => courseTotalScore += Number(comment.score));
+    const totalScore = courseComments.reduce((acc, curr) => acc + (curr.score || 0), 0);
+    const avgScore = courseComments.length > 0 ? Math.round(totalScore / courseComments.length) : 5;
 
-    let isUserRegisteredToThisCourse = false;
+    let isUserRegistered = false;
     if (req.user) {
-      isUserRegisteredToThisCourse = !!(await courseUserModel.findOne({
+      isUserRegistered = !!(await courseUserModel.findOne({
         user: req.user._id,
         course: course._id,
       }));
     }
 
-    const courseInfo = {
+    res.status(200).json({
       ...course,
-      categoryID: course.categoryID.title,
-      creator: course.creator.name,
-      registers: courseRegisters.length,
-      courseAverageScore: Math.floor(courseTotalScore / (courseComments.length + 1)),
-      isUserRegisteredToThisCourse,
-    };
-
-    res.status(200).json(courseInfo);
-
+      instructor: course.instructor?.name,
+      category: course.category?.title,
+      registers: courseRegisters,
+      courseAverageScore: avgScore,
+      isUserRegisteredToThisCourse: isUserRegistered,
+    });
   } catch (err) {
     next(err);
   }
@@ -143,9 +146,14 @@ exports.getOne = async (req, res, next) => {
 /* Create Course*/
 exports.post = async (req, res, next) => {
   try {
-    if (!req.admin) return next({ status: 403, message: "Forbidden" });
-
-    const parsed = createCourseSchema.safeParse(req.body);
+    const courseData = {
+      ...req.body,
+      price: Number(req.body.price),
+      discount: Number(req.body.discount),
+      rating: Number(req.body.rating),
+      coverImage: req.file ? req.file.filename : undefined
+    };
+    const parsed = createCourseSchema.safeParse(courseData);
     if (!parsed.success)
       return next({ status: 422, message: "Invalid data", errors: parsed.error.issues });
 
@@ -170,15 +178,21 @@ exports.post = async (req, res, next) => {
 /* Update Course*/
 exports.patch = async (req, res, next) => {
   try {
-    if (!req.admin) return next({ status: 403, message: "Forbidden" });
-
     const idParsed = courseIdParamSchema.safeParse(req.params);
     if (!idParsed.success)
       return next({ status: 422, message: "Invalid ID" });
 
-    const parsed = updateCourseSchema.safeParse(req.body);
+    const courseData = {
+      ...req.body,
+      price: Number(req.body.price),
+      discount: Number(req.body.discount),
+      rating: Number(req.body.rating),
+      coverImage: req.file ? req.file.filename : undefined
+    };
+    const parsed = updateCourseSchema.safeParse(courseData);
     if (!parsed.success)
       return next({ status: 422, message: "Invalid data", errors: parsed.error.issues });
+
 
     const course = await courseModel.findById(idParsed.data.id);
     if (!course) return next({ status: 404, message: "Course not found" });
@@ -201,8 +215,6 @@ exports.patch = async (req, res, next) => {
 /* Delete Course */
 exports.remove = async (req, res, next) => {
   try {
-    if (!req.admin) return next({ status: 403, message: "Forbidden" });
-
     const parsed = courseIdParamSchema.safeParse(req.params);
     if (!parsed.success) return next({ status: 422, message: "Invalid ID" });
 
@@ -219,39 +231,29 @@ exports.remove = async (req, res, next) => {
 /* Register User To Course*/
 exports.register = async (req, res, next) => {
   try {
-    const courseId = req.params.id;
-    const price = Number(req.body.price);
+    const { id } = req.params;
+    const { price } = req.body;
 
-    if (!mongoose.Types.ObjectId.isValid(courseId)) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid Course ID" });
     }
 
-    if (isNaN(price)) {
-      return res.status(400).json({ message: "Invalid price format" });
-    }
-
-    const isUserAlreadyRegistered = await courseUserModel
-      .findOne({
-        user: req.user._id,
-        course: String(courseId)
-      })
-      .lean();
+    const isUserAlreadyRegistered = await courseUserModel.findOne({
+      user: req.user._id,
+      course: String(id)
+    }).lean();
 
     if (isUserAlreadyRegistered) {
-      return res.status(400).json({ 
-        message: "You are already registered to this course." 
-      });
+      return res.status(400).json({ message: "You are already registered." });
     }
 
     await courseUserModel.create({
       user: req.user._id,
-      course: String(courseId),
-      price: price,
+      course: String(id),
+      price: Number(price) || 0,
     });
 
-    return res.status(201).json({ 
-      message: "You are registered successfully." 
-    });
+    return res.status(201).json({ message: "Registered successfully." });
   } catch (error) {
     next(error);
   }

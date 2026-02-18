@@ -10,7 +10,7 @@ const {
 } = require("../controllers/user");
 
 const { authAdmin, authUser } = require("../middlewares/authMiddleware");
-const upload = require("../middlewares/multer");
+const upload = require("../utils/multer");
 
 
 userRouter.get("/", authAdmin, get);

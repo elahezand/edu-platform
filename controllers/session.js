@@ -10,10 +10,7 @@ const { paginate } = require("../utils/helper");
 /*  Get All Sessions (Admin)  */
 exports.get = async (req, res, next) => {
   try {
-    if (!req.admin)
-      return next({ status: 403, message: "Forbidden" });
-
-    const searchParams = req.query;
+    const searchParams = new URLSearchParams(req.query);
     const useCursor = searchParams.has("cursor");
 
     const result = await paginate(
@@ -53,9 +50,6 @@ exports.getOne = async (req, res, next) => {
 /*  Create Session (Admin)  */
 exports.post = async (req, res, next) => {
   try {
-    if (!req.admin)
-      return next({ status: 403, message: "Forbidden" });
-
     const parsed = createSessionSchema.safeParse(req.body);
     if (!parsed.success)
       return next({
@@ -92,9 +86,6 @@ exports.post = async (req, res, next) => {
 /*  Update Session (Admin)  */
 exports.patch = async (req, res, next) => {
   try {
-    if (!req.admin)
-      return next({ status: 403, message: "Forbidden" });
-
     const idParsed = sessionIdParamSchema.safeParse(req.params);
     if (!idParsed.success)
       return next({ status: 422, message: "Invalid ID" });
@@ -134,9 +125,6 @@ exports.patch = async (req, res, next) => {
 /*  Delete Session (Admin)  */
 exports.remove = async (req, res, next) => {
   try {
-    if (!req.admin)
-      return next({ status: 403, message: "Forbidden" });
-
     const parsed = sessionIdParamSchema.safeParse(req.params);
     if (!parsed.success)
       return next({ status: 422, message: "Invalid ID" });
@@ -155,7 +143,8 @@ exports.remove = async (req, res, next) => {
 /*  Get Sessions by Course  */
 exports.getSessionCourse = async (req, res, next) => {
   try {
-    const searchParams = req.query;
+    const searchParams = new URLSearchParams(req.query);
+    const useCursor = searchParams.has("cursor");
     const shortName = String(req.params.shortName);
 
     const course = await courseModel.findOne({ shortName }).lean();
@@ -163,8 +152,6 @@ exports.getSessionCourse = async (req, res, next) => {
     if (!course) {
       return res.status(404).json({ message: "Course not found" });
     }
-    const useCursor = searchParams.has("cursor");
-
     const result = await paginate(
       sessionModel,
       searchParams,

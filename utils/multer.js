@@ -1,12 +1,13 @@
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const crypto = require("crypto");
 
 const paths = {
   coverImage: path.join(__dirname, "..", "public", "courses", "covers"),
   videoUrl: path.join(__dirname, "..", "public", "sessions", "videos"),
   avatar: path.join(__dirname, "..", "public", "users", "avatars"),
-  articleCover: path.join(__dirname, "..", "public", "articles", "covers"),
+  cover: path.join(__dirname, "..", "public", "articles", "covers"), 
 };
 
 Object.values(paths).forEach(p => {
@@ -15,28 +16,34 @@ Object.values(paths).forEach(p => {
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const targetField = file.fieldname === "cover" ? "articleCover" : file.fieldname;
+    const targetPath = paths[file.fieldname];
     
-    if (paths[targetField]) {
-      cb(null, paths[targetField]);
+    if (targetPath) {
+      cb(null, targetPath);
     } else {
       cb(new Error(`No path defined for field: ${file.fieldname}`), false);
     }
   },
 
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
+    const ext = path.extname(file.originalname).toLowerCase();
+    const uniqueSuffix = crypto.randomBytes(8).toString('hex');
+    cb(null, `${file.fieldname}-${Date.now()}-${uniqueSuffix}${ext}`);
   }
 });
 
 const fileFilter = (req, file, cb) => {
+  const allowedExtensions = ['.png', '.jpg', '.jpeg', '.webp', '.mp4', '.mkv'];
+  const ext = path.extname(file.originalname).toLowerCase();
+
+  if (!allowedExtensions.includes(ext)) {
+    return cb(new Error("File extension not allowed"), false);
+  }
+
   const allowedMimeTypes = {
     coverImage: "image/",
     avatar: "image/",
     cover: "image/",     
-    articleCover: "image/",
     videoUrl: "video/"
   };
 
@@ -45,7 +52,7 @@ const fileFilter = (req, file, cb) => {
   if (expectedType && file.mimetype.startsWith(expectedType)) {
     cb(null, true);
   } else {
-    cb(new Error(`Invalid file type for ${file.fieldname}. Expected ${expectedType}`), false);
+    cb(new Error(`Invalid mimetype for ${file.fieldname}`), false);
   }
 };
 
@@ -53,7 +60,7 @@ const upload = multer({
   storage, 
   fileFilter,
   limits: {
-    fileSize: 100 * 1024 * 1024,
+    fileSize: 100 * 1024 * 1024, // 100MB
   }
 });
 

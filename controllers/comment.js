@@ -12,7 +12,7 @@ const { paginate } = require("../utils/helper");
 /* Get Comments*/
 exports.get = async (req, res, next) => {
   try {
-    const searchParams = req.query;
+    const searchParams = new URLSearchParams(req.query);
     const useCursor = searchParams.has("cursor");
     const course = searchParams.get("course");
 
@@ -34,9 +34,6 @@ exports.get = async (req, res, next) => {
 /* Create Comment (User)*/
 exports.post = async (req, res, next) => {
   try {
-    if (!req.user)
-      return next({ status: 403, message: "Forbidden" });
-
     const parsed = createCommentSchema.safeParse(req.body);
 
     if (!parsed.success)
@@ -64,8 +61,6 @@ exports.post = async (req, res, next) => {
 /* Answer Comment (Admin)*/
 exports.answer = async (req, res, next) => {
   try {
-    if (!req.admin)
-      return next({ status: 403, message: "Forbidden" });
 
     const paramParsed = commentIdParamSchema.safeParse(req.params);
     if (!paramParsed.success)
@@ -105,9 +100,6 @@ exports.answer = async (req, res, next) => {
 /* Accept Comment (Admin)*/
 exports.accept = async (req, res, next) => {
   try {
-    if (!req.admin)
-      return next({ status: 403, message: "Forbidden" });
-
     const parsed = commentIdParamSchema.safeParse(req.params);
     if (!parsed.success)
       return next({ status: 422, message: "Invalid ID" });
@@ -128,9 +120,6 @@ exports.accept = async (req, res, next) => {
 /* Update Comment (Admin)*/
 exports.patch = async (req, res, next) => {
   try {
-    if (!req.admin)
-      return next({ status: 403, message: "Forbidden" });
-
     const paramParsed = commentIdParamSchema.safeParse(req.params);
     if (!paramParsed.success)
       return next({ status: 422, message: "Invalid ID" });
@@ -161,9 +150,6 @@ exports.patch = async (req, res, next) => {
 /* Delete Comment (Admin)*/
 exports.remove = async (req, res, next) => {
   try {
-    if (!req.admin)
-      return next({ status: 403, message: "Forbidden" });
-
     const parsed = commentIdParamSchema.safeParse(req.params);
     if (!parsed.success)
       return next({ status: 422, message: "Invalid ID" });

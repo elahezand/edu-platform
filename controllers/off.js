@@ -4,9 +4,10 @@ const { offIdParamSchema, createOffSchema, updateOffSchema } = require("../valid
 /* Get All Offs*/
 exports.getAll = async (req, res, next) => {
   try {
-    if (!req.admin) return next({ status: 403, message: "Forbidden" });
 
-    const searchParams = req.query
+    const searchParams = new URLSearchParams(req.query);
+    const useCursor = searchParams.has("cursor");
+
     const result = await paginate(
       offModel,
       searchParams,
@@ -27,8 +28,6 @@ exports.getAll = async (req, res, next) => {
  */
 exports.getOne = async (req, res, next) => {
   try {
-    if (!req.admin) return next({ status: 403, message: "Forbidden" });
-
     const parsed = offIdParamSchema.safeParse(req.params);
     if (!parsed.success) return next({ status: 422, message: "Invalid ID" });
 
@@ -48,8 +47,6 @@ exports.getOne = async (req, res, next) => {
 /*  Create Off*/
 exports.post = async (req, res, next) => {
   try {
-    if (!req.admin) return next({ status: 403, message: "Forbidden" });
-
     const parsed = createOffSchema.safeParse(req.body);
     if (!parsed.success)
       return next({ status: 422, message: "Invalid data", errors: parsed.error.issues });
@@ -70,8 +67,6 @@ exports.post = async (req, res, next) => {
  */
 exports.patch = async (req, res, next) => {
   try {
-    if (!req.admin) return next({ status: 403, message: "Forbidden" });
-
     const idParsed = offIdParamSchema.safeParse(req.params);
     if (!idParsed.success) return next({ status: 422, message: "Invalid ID" });
 
@@ -96,8 +91,6 @@ exports.patch = async (req, res, next) => {
 /*   Delete Off*/
 exports.remove = async (req, res, next) => {
   try {
-    if (!req.admin) return next({ status: 403, message: "Forbidden" });
-
     const parsed = offIdParamSchema.safeParse(req.params);
     if (!parsed.success) return next({ status: 422, message: "Invalid ID" });
 
