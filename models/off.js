@@ -26,7 +26,7 @@ const offSchema = new mongoose.Schema(
     },
     uses: {
       type: Number,
-      default: 0, 
+      default: 0,
       min: [0, "Uses cannot be negative"],
     },
     creator: {
@@ -34,24 +34,27 @@ const offSchema = new mongoose.Schema(
       ref: "User",
       required: [true, "Creator reference is required"],
     },
+    usedBy: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: "User",
+      default: [],
+    },
   },
-   {
-        timestamps: true,
-        toObject: { virtuals: true },
-        toJSON: {
-            virtuals: true,
-            transform(doc, ret) {
-                ret.id = ret._id.toString();
-                delete ret._id;
-                delete ret.__v;
-                return ret;
-            },
-        },
-    }
+  {
+    timestamps: true,
+    toObject: { virtuals: true },
+    toJSON: {
+      virtuals: true,
+      transform(doc, ret) {
+        ret.id = ret._id.toString();
+        delete ret._id;
+        delete ret.__v;
+        return ret;
+      },
+    },
+  }
 );
 
-
-const offModel =
-  mongoose.models.Off || mongoose.model("Off", offSchema);
+const offModel = mongoose.models.Off || mongoose.model("Off", offSchema);
 
 module.exports = offModel;

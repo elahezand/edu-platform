@@ -17,7 +17,7 @@ const createContactSchema = z.object({
     .trim()
     .min(1, "Message body is required")
     .max(2000, "Message is too long"),
-  answer: z.boolean().default(false),
+  isAnswer: z.boolean().default(false),
 });
 
 

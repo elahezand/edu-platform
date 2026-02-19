@@ -3,6 +3,7 @@ const {
   createContactSchema,
 } = require("../validators/contact");
 const { paginate } = require("../utils/helper");
+const sendEmail = require("../utils/sendEmail");
 
 /*   Get All Contacts (Admin)*/
 exports.get = async (req, res, next) => {
@@ -64,6 +65,33 @@ exports.post = async (req, res, next) => {
   }
 };
 
+/*  Create Contact (Public)*/
+exports.answer = async (req, res, next) => {
+  try {
+    const { email, content } = req.body;
+
+    const mainContact = await contactModel.findById(req.params.id);
+
+    if (!mainContact)
+      return next({ status: 404, message: "Contact not found" });
+
+    mainContact.isAnswer = true;
+    await mainContact.save();
+
+    await sendEmail(
+      email,
+      `Dear ${mainContact.name}`,
+      `<p>${content}</p>`
+    );
+
+    res.status(200).json({
+      message: "Answer sent successfully",
+    });
+
+  } catch (err) {
+    next(err);
+  }
+};
 /*  Delete Contact (Admin)*/
 exports.remove = async (req, res, next) => {
   try {

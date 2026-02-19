@@ -7,10 +7,6 @@ const ticketSchema = new mongoose.Schema(
       required: true,
       ref: "Department",
     },
-    priority: {
-      type: Number,
-      required: true,
-    },
     title: {
       type: String,
       required: true,
@@ -35,24 +31,28 @@ const ticketSchema = new mongoose.Schema(
       ref: "Course",
       default: "634e6b0e1d5142b91afa9bb3",
     },
+    priority: {
+      type: Number,
+      required: true,
+    },
     isAnswer: {
       type: Number,
       required: false,
     },
   },
-   {
-        timestamps: true,
-        toObject: { virtuals: true },
-        toJSON: {
-            virtuals: true,
-            transform(doc, ret) {
-                ret.id = ret._id.toString();
-                delete ret._id;
-                delete ret.__v;
-                return ret;
-            },
-        },
-    }
+  {
+    timestamps: true,
+    toObject: { virtuals: true },
+    toJSON: {
+      virtuals: true,
+      transform(doc, ret) {
+        ret.id = ret._id.toString();
+        delete ret._id;
+        delete ret.__v;
+        return ret;
+      },
+    },
+  }
 );
 
 const ticketModel =

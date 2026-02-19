@@ -6,20 +6,17 @@ const validateObjectIdParam = require("../middlewares/objectId")
 
 // Get all notifications (admin)
 notificationRouter.get("/", authAdmin, controller.getAll);
+// Create a new notification
+notificationRouter.post("/", authAdmin, controller.post);
 
 notificationRouter.get("/:id", authAdmin,
     validateObjectIdParam("id"),
-    controller.getOne);
-
-// Create a new notification
-notificationRouter.post("/", authAdmin,
-    validateObjectIdParam("id"),
-    controller.post);
+    controller.get);
 
 // Update a notification (optional)
-notificationRouter.patch("/:id", authAdmin,
+notificationRouter.put("/:id", authAdmin,
     validateObjectIdParam("id"),
-    controller.patch);
+    controller.seen);
 
 // Delete a notification
 notificationRouter.delete("/:id", authAdmin,

@@ -18,11 +18,9 @@ const contactSchema = new mongoose.Schema(
       required: [true, "Phone number is required"],
       trim: true,
     },
-    answer: {
-      type: Number,
-      required: [true, "Answer is required"],
-      min: 1,
-      max: 5,
+    isAnswer: {
+      type: Boolean,
+      default: false,
     },
     body: {
       type: String,

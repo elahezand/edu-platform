@@ -1,10 +1,28 @@
 const menuModel = require("../models/menu");
-const {updateMenuSchema, createMenuSchema } = require("../validators/menu");
+const { updateMenuSchema, createMenuSchema } = require("../validators/menu");
 // Get All Menus// 
 exports.get = async (req, res, next) => {
     try {
-        const menus = await menuModel.find().lean();
-        res.status(200).json(menus);
+        const menus = await menuModel.find({}).lean();
+        const map = {};
+        const tree = [];
+
+        menus.forEach(menu => {
+            map[menu._id] = { ...menu, children: [] };
+        });
+
+        menus.forEach(menu => {
+            const currentItem = map[menu._id];
+            const parentId = menu.parentId;
+
+            if (parentId && map[parentId]) {
+                map[parentId].children.push(currentItem);
+            } else {
+                tree.push(currentItem);
+            }
+        });
+
+        res.status(200).json(tree);
     } catch (err) {
         next(err);
     }
@@ -16,7 +34,12 @@ exports.getOne = async (req, res, next) => {
         const menu = await menuModel.findById(req.params.id).lean();
         if (!menu) return res.status(404).json({ message: "Menu not found" });
 
-        res.status(200).json(menu);
+        const subMenus = await menuModel.find({ parent: menu._id }).lean();
+
+        res.status(200).json({
+            menu,
+            subMenus
+        });
     } catch (err) {
         next(err);
     }

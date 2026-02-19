@@ -4,7 +4,10 @@ const { createNotificationSchema } = require("../validators/notification");
 // Get all notifications
 exports.getAll = async (req, res, next) => {
     try {
-        const notifications = await notificationModel.find().populate("admin", "name email").lean();
+        const notifications = await notificationModel
+            .find({ admin: req.admin._id })
+            .lean();
+
         res.status(200).json(notifications);
     } catch (err) {
         next(err);
@@ -12,7 +15,7 @@ exports.getAll = async (req, res, next) => {
 };
 
 // Get one notification by ID
-exports.getOne = async (req, res, next) => {
+exports.get = async (req, res, next) => {
     try {
         const notification = await notificationModel.findById(req.params.id).populate("admin", "name email").lean();
         if (!notification) return res.status(404).json({ message: "Notification not found" });
@@ -36,23 +39,25 @@ exports.post = async (req, res, next) => {
 };
 
 // Update a notification
-exports.patch = async (req, res, next) => {
-    try {
-        const parsed = createNotificationSchema.partial().safeParse(req.body);
-        if (!parsed.success) return res.status(422).json({ message: parsed.error.errors });
+exports.seen = async (req, res, next) => {
+  try {
+    const updatedNotification = await notificationModel.findByIdAndUpdate(
+      req.params.id,
+      { $set: { see: 1 } },
+      {
+        new: true,            
+        runValidators: true, 
+      }
+    );
 
-        const updatedNotification = await notificationModel.findByIdAndUpdate(
-            req.params.id,
-            { $set: parsed.data },
-            { new: true }
-        );
-
-        if (!updatedNotification) return res.status(404).json({ message: "Notification not found" });
-
-        res.status(200).json(updatedNotification);
-    } catch (err) {
-        next(err);
+    if (!updatedNotification) {
+      return res.status(404).json({ message: "Notification not found" });
     }
+
+    res.status(200).json(updatedNotification);
+  } catch (err) {
+    next(err);
+  }
 };
 
 // Delete a notification

@@ -1,5 +1,7 @@
 const offModel = require("../models/off");
 const { createOffSchema, updateOffSchema } = require("../validators/off");
+const courseModel = require("../models/course")
+const { paginate } = require("../utils/helper");
 
 /* Get All Offs*/
 exports.getAll = async (req, res, next) => {
@@ -21,26 +23,7 @@ exports.getAll = async (req, res, next) => {
     next(err);
   }
 };
-
-/* 
-   Get One Off
- */
-exports.getOne = async (req, res, next) => {
-  try {
-    const off = await offModel.findById(req.params.id)
-      .populate("course", "title")
-      .populate("creator", "name")
-      .lean();
-
-    if (!off) return next({ status: 404, message: "Off not found" });
-
-    res.status(200).json(off);
-  } catch (err) {
-    next(err);
-  }
-};
-
-/*  Create Off*/
+/*Create Off*/
 exports.post = async (req, res, next) => {
   try {
     const parsed = createOffSchema.safeParse(req.body);
@@ -57,10 +40,41 @@ exports.post = async (req, res, next) => {
     next(err);
   }
 };
+/*set On All*/
+exports.setOnAll = async (req, res, next) => {
+  try {
+    const parsed = createOffSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return next({
+        status: 422,
+        message: "Invalid data",
+        errors: parsed.error.issues
+      });
+    }
 
-/* 
-   Update Off
- */
+    const newOff = await offModel.create({
+      ...parsed.data,
+      creator: req.user._id
+    });
+
+    const courses = await courseModel.find({ name: "discount" });
+
+    for (let course of courses) {
+      course.discount = newOff.percent;
+      course.price = course.price * (1 - newOff.percent / 100);
+      await course.save();
+    }
+
+    res.status(201).json({
+      message: "Off created and applied to products",
+      off: newOff,
+    });
+
+  } catch (err) {
+    next(err);
+  }
+};
+/* Update Off*/
 exports.patch = async (req, res, next) => {
   try {
     const parsed = updateOffSchema.safeParse(req.body);
@@ -80,8 +94,7 @@ exports.patch = async (req, res, next) => {
     next(err);
   }
 };
-
-/*   Delete Off*/
+/*Delete Off*/
 exports.remove = async (req, res, next) => {
   try {
     const deleted = await offModel.findByIdAndDelete(req.params.id);
@@ -92,3 +105,40 @@ exports.remove = async (req, res, next) => {
     next(err);
   }
 };
+/*apply  Off*/
+exports.applyOff = async (req, res, next) => {
+  try {
+    const { code } = req.body
+
+    const off = await offModel.findOneAndUpdate(
+      {
+        code,
+        $expr: { $lt: ["$uses", "$max"] },
+        usedBy: { $ne: req.user._id }
+      },
+      {
+        $inc: { uses: 1 },
+        $push: { usedBy: req.user._id }
+      },
+      { new: true }
+    ).populate("course")
+
+    if (!off) {
+      return next({
+        status: 400,
+        message: "Invalid, expired, or already used discount code"
+      });
+    }
+
+    const discountedPrice = off.course.price * (1 - off.percent / 100);
+
+    res.status(200).json({
+      message: "Discount applied successfully",
+      discountedPrice
+    });
+
+  } catch (err) {
+    next(err);
+  }
+};
+
