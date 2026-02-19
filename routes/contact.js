@@ -16,6 +16,9 @@ contactRouter.get("/:id", authAdmin,
 contactRouter.delete("/:id", authAdmin,
     validateObjectIdParam("id"),
     controller.remove);
-
+    
+contactRouter.post("/:id/answer",
+    validateObjectIdParam("id"),
+    controller.answer);
 
 module.exports = contactRouter;

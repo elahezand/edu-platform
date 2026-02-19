@@ -5,7 +5,6 @@ const commentModel = require("../models/comment");
 const {
   createCourseSchema,
   updateCourseSchema,
-  courseIdParamSchema,
 } = require("../validators/course");
 const { paginate } = require("../utils/helper");
 
@@ -221,16 +220,11 @@ exports.remove = async (req, res, next) => {
 /* Register User To Course*/
 exports.register = async (req, res, next) => {
   try {
-    const { id } = req.params;
     const { price } = req.body;
-
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid Course ID" });
-    }
 
     const isUserAlreadyRegistered = await courseUserModel.findOne({
       user: req.user._id,
-      course: String(id)
+      course: req.params.id
     }).lean();
 
     if (isUserAlreadyRegistered) {

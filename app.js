@@ -19,6 +19,10 @@ const menuRouter = require("./routes/menu");
 const newsLetterRouter = require("./routes/newsletter");
 const notificationRouter = require("./routes/notification");
 const offRouter = require("./routes/off");
+const ticketRouter = require("./routes/ticket");
+const searchRouter = require("./routes/search");
+const orderRouter = require("./routes/order");
+
 
 const app = express();
 
@@ -57,6 +61,11 @@ apiRouter.use("/menu", menuRouter);
 apiRouter.use("/newsletter", newsLetterRouter);
 apiRouter.use("/notification", notificationRouter);
 apiRouter.use("/off", offRouter);
+apiRouter.use("/tickets", ticketRouter);
+apiRouter.use("/search",searchRouter)
+apiRouter.use("/orders",orderRouter)
+
+
 
 app.use("/api", apiRouter);
 
