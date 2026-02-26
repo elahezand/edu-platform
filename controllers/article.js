@@ -1,9 +1,4 @@
 const articleModel = require("../models/article");
-const {
-  createArticleSchema,
-  updateArticleSchema,
-} = require("../validators/article");
-
 const { paginate } = require("../utils/helper");
 
 /* Get Articles*/
@@ -47,27 +42,22 @@ exports.getOne = async (req, res, next) => {
 /* Create Article*/
 exports.post = async (req, res, next) => {
   try {
-    const parsed = createArticleSchema.safeParse(req.body);
-    if (!parsed.success)
-      return next({
-        status: 422,
-        message: "Invalid data",
-        errors: parsed.error.issues
-      });
-
     if (!req.file)
       return next({ status: 400, message: "Cover image is required" });
 
-    const existing = await articleModel.findOne({ title: parsed.data.title });
+    const { title } = req.parsed.data;
+
+    const existing = await articleModel.findOne({ title });
     if (existing)
       return next({ status: 409, message: "Article already exists" });
 
     const cover = `/articles/covers/${req.file.filename}`;
 
     const article = await articleModel.create({
-      ...parsed.data,
+      title,
+      ...req.parsed.data,
       cover,
-      creator: req.admin._id
+      creator: req.user._id
     });
 
     res.status(201).json({
@@ -84,20 +74,12 @@ exports.post = async (req, res, next) => {
 exports.patch = async (req, res, next) => {
   try {
 
-    const bodyParsed = updateArticleSchema.safeParse(req.body);
-    if (!bodyParsed.success)
-      return next({
-        status: 422,
-        message: "Invalid data",
-        errors: bodyParsed.error.issues
-      });
-
     const article = await articleModel.findById(req.params.id);
     if (!article)
       return next({ status: 404, message: "Article not found" });
 
     const updateData = {
-      ...bodyParsed.data
+      ...req.parsed.data
     };
 
     if (req.file)

@@ -1,11 +1,10 @@
 const notificationModel = require("../models/notification");
-const { createNotificationSchema } = require("../validators/notification");
 
 // Get all notifications
 exports.getAll = async (req, res, next) => {
     try {
         const notifications = await notificationModel
-            .find({ admin: req.admin._id })
+            .find({ admin: req.user._id })
             .lean();
 
         res.status(200).json(notifications);
@@ -28,10 +27,7 @@ exports.get = async (req, res, next) => {
 // Create a new notification
 exports.post = async (req, res, next) => {
     try {
-        const parsed = createNotificationSchema.safeParse(req.body);
-        if (!parsed.success) return res.status(422).json({ message: parsed.error.errors });
-
-        const newNotification = await notificationModel.create(parsed.data);
+        const newNotification = await notificationModel.create(req.parsed.data);
         res.status(201).json(newNotification);
     } catch (err) {
         next(err);

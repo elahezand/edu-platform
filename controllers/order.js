@@ -26,7 +26,7 @@ exports.get = async (req, res, next) => {
 exports.getOne = async (req, res, next) => {
     try {
         const mainOrder = await courseUserModel
-            .find({ _id: req.params.id })
+            .findOne({ _id: req.params.id })
             .populate("course")
             .lean();
 

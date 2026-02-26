@@ -1,5 +1,4 @@
 const offModel = require("../models/off");
-const { createOffSchema, updateOffSchema } = require("../validators/off");
 const courseModel = require("../models/course")
 const { paginate } = require("../utils/helper");
 
@@ -26,12 +25,8 @@ exports.getAll = async (req, res, next) => {
 /*Create Off*/
 exports.post = async (req, res, next) => {
   try {
-    const parsed = createOffSchema.safeParse(req.body);
-    if (!parsed.success)
-      return next({ status: 422, message: "Invalid data", errors: parsed.error.issues });
-
     const newOff = await offModel.create({
-      ...parsed.data,
+      ...req.parsed.data,
       creator: req.user._id
     });
 
@@ -43,47 +38,27 @@ exports.post = async (req, res, next) => {
 /*set On All*/
 exports.setOnAll = async (req, res, next) => {
   try {
-    const parsed = createOffSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return next({
-        status: 422,
-        message: "Invalid data",
-        errors: parsed.error.issues
-      });
-    }
+    const newOff = await offModel.create({ ...req.parsed.data, creator: req.user._id });
+    await courseModel.updateMany(
+      {}, 
+      {
+        $set: { discount: newOff.percent },
+      }
+    );
 
-    const newOff = await offModel.create({
-      ...parsed.data,
-      creator: req.user._id
-    });
-
-    const courses = await courseModel.find({ name: "discount" });
-
-    for (let course of courses) {
-      course.discount = newOff.percent;
-      course.price = course.price * (1 - newOff.percent / 100);
-      await course.save();
-    }
-
-    res.status(201).json({
-      message: "Off created and applied to products",
-      off: newOff,
-    });
-
+    res.status(201).json({ message: "Off created and applied to all courses", off: newOff });
   } catch (err) {
     next(err);
   }
 };
+
 /* Update Off*/
 exports.patch = async (req, res, next) => {
   try {
-    const parsed = updateOffSchema.safeParse(req.body);
-    if (!parsed.success)
-      return next({ status: 422, message: "Invalid data", errors: parsed.error.issues });
-
+   
     const updatedOff = await offModel.findByIdAndUpdate(
       req.params.id,
-      parsed.data,
+      req.parsed.data,
       { new: true }
     );
 

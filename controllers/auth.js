@@ -1,7 +1,5 @@
-const { userValidationSchema } = require("../validators/user");
 const UserModel = require("../models/user");
 const BanModel = require("../models/ban");
-const z = require("zod");
 
 const {
   generateToken,
@@ -20,12 +18,7 @@ const cookieOptions = {
 // SIGNUP
 exports.signup = async (req, res, next) => {
   try {
-    const parsed = userValidationSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return next({ status: 422, message: "Invalid data", errors: parsed.error.issues });
-    }
-
-    const { username, email, password, phone } = parsed.data;
+    const { username, email, password, phone } = req.parsed.data;
 
     const isBanUser = await BanModel.findOne({
       $or: [{ email }, { phone }]
@@ -84,18 +77,11 @@ exports.signup = async (req, res, next) => {
   }
 };
 // SIGNIN
-const signinSchema = z.object({
-  identifier: z.string(),
-  password: z.string().min(6)
-});
+
 exports.signin = async (req, res, next) => {
   try {
-    const parsed = signinSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return next({ status: 422, message: "Invalid data", errors: parsed.error.issues });
-    }
 
-    const { identifier, password } = parsed.data;
+    const { identifier, password } = req.parsed.data;
 
     const isBanUser = await BanModel.findOne({
       $or: [{ email: identifier }, { phone: identifier }]
@@ -155,12 +141,7 @@ exports.getMe = async (req, res, next) => {
     });
     if (isBanUser)
       return next({ status: 403, message: "Access denied" });
-
-    const userObj = req.user.toObject();
-    delete userObj.password;
-    delete userObj.refreshToken;
-
-    res.status(200).json({ user: userObj });
+    res.status(200).json({ user: req.user });
 
   } catch (err) {
     next(err);

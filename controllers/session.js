@@ -1,9 +1,5 @@
 const sessionModel = require("../models/session");
 const courseModel = require("../models/course");
-const {
-  createSessionSchema,
-  updateSessionSchema,
-} = require("../validators/session");
 const { paginate } = require("../utils/helper");
 
 /*  Get All Sessions (Admin)  */
@@ -45,15 +41,7 @@ exports.getOne = async (req, res, next) => {
 /*  Create Session (Admin)  */
 exports.post = async (req, res, next) => {
   try {
-    const parsed = createSessionSchema.safeParse(req.body);
-    if (!parsed.success)
-      return next({
-        status: 422,
-        message: "Invalid data",
-        errors: parsed.error.issues
-      });
-
-    const { title, course } = parsed.data;
+    const { title, course } = req.parsed.data;
 
     const exists = await sessionModel.findOne({ title, course });
     if (exists)
@@ -61,10 +49,10 @@ exports.post = async (req, res, next) => {
 
     const videoUrl = req.file
       ? `/session/videos/${req.file.filename}`
-      : parsed.data.videoUrl || "";
+      : req.parsed.data.videoUrl || "";
 
     const newSession = await sessionModel.create({
-      ...parsed.data,
+      ...req.parsed.data,
       videoUrl
     });
 
@@ -81,14 +69,6 @@ exports.post = async (req, res, next) => {
 /*  Update Session (Admin)  */
 exports.patch = async (req, res, next) => {
   try {
-    const parsed = updateSessionSchema.safeParse(req.body);
-    if (!parsed.success)
-      return next({
-        status: 422,
-        message: "Invalid data",
-        errors: parsed.error.issues
-      });
-
     const session = await sessionModel.findById(req.params.id);
     if (!session)
       return next({ status: 404, message: "Session not found" });
@@ -99,7 +79,7 @@ exports.patch = async (req, res, next) => {
 
     const updated = await sessionModel.findByIdAndUpdate(
       req.params.id,
-      { $set: { ...parsed.data, videoUrl } },
+      { $set: { ...req.parsed.data, videoUrl } },
       { new: true }
     );
 

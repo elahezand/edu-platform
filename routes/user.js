@@ -9,26 +9,47 @@ const {
   toggleRole
 } = require("../controllers/user");
 
-const { authAdmin, authUser } = require("../middlewares/authMiddleware");
+const { authAdmin, identifyUser } = require("../middlewares/authMiddleware");
+
 const upload = require("../utils/multer");
 const validateObjectIdParam = require("../middlewares/objectId")
 
+const validate = require("../middlewares/validate")
+const { createUserSchema, updateUserSchema } = require("../validators/user");
 
 
-userRouter.get("/", authAdmin, get);
-userRouter.post("/", authAdmin, post);
-userRouter.post("/ban", authAdmin, ban);
+userRouter.get("/",
+  identifyUser,
+  authAdmin,
+  get);
 
-userRouter.put("/:id", authUser,
+userRouter.post("/ban",
+  identifyUser,
+  authAdmin, ban);
+
+userRouter.post("/",
+  identifyUser,
+  authAdmin,
+  validate(createUserSchema),
+  post);
+
+userRouter.put("/:id",
+  identifyUser,
   validateObjectIdParam("id"),
-  upload.single("avatar"), put);
+  upload.single("avatar"),
+  validate(updateUserSchema),
+  put);
 
-userRouter.delete("/:id", authAdmin,
+userRouter.delete("/:id",
+  identifyUser,
+  authAdmin,
   validateObjectIdParam("id"),
   remove);
 
 
-userRouter.patch("/role/:id", authAdmin,
+userRouter.patch("/role/:id",
+  identifyUser,
+  authAdmin,
   validateObjectIdParam("id"),
   toggleRole);
 

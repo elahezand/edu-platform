@@ -1,11 +1,5 @@
 const commentModel = require("../models/comment");
 const courseModel = require("../models/course");
-const {
-  createCommentSchema,
-  answerCommentSchema,
-  updateCommentSchema,
-} = require("../validators/comment");
-
 const { paginate } = require("../utils/helper");
 
 /* Get Comments*/
@@ -33,21 +27,12 @@ exports.get = async (req, res, next) => {
 /* Create Comment (User)*/
 exports.post = async (req, res, next) => {
   try {
-    const parsed = createCommentSchema.safeParse(req.body);
-
-    if (!parsed.success)
-      return next({
-        status: 422,
-        message: "Invalid data",
-        errors: parsed.error.issues,
-      });
-
-    const course = await courseModel.findById(parsed.data.course);
+    const course = await courseModel.findById(req.parsed.data.course);
     if (!course)
       return next({ status: 404, message: "Course not found" });
 
     await commentModel.create({
-      ...parsed.data,
+      ...req.parsed.data,
       user: req.user._id,
     });
 
@@ -60,21 +45,14 @@ exports.post = async (req, res, next) => {
 /* Answer Comment (Admin)*/
 exports.answer = async (req, res, next) => {
   try {
-    const bodyParsed = answerCommentSchema.safeParse(req.body);
-    if (!bodyParsed.success)
-      return next({
-        status: 422,
-        message: "Invalid data",
-        errors: bodyParsed.error.issues,
-      });
 
     const updated = await commentModel.findByIdAndUpdate(
       req.params.id,
       {
         $push: {
           answers: {
-            text: bodyParsed.data.text,
-            admin: req.admin._id,
+            text: req.parsed.data.text,
+            admin: req.user._id,
             createdAt: new Date(),
           },
         },
@@ -95,32 +73,21 @@ exports.answer = async (req, res, next) => {
 exports.accept = async (req, res, next) => {
   try {
     const comment = await commentModel.findById(req.params.id);
-    if (!comment)
-      return next({ status: 404, message: "Comment not found" });
-
+    if (!comment) return next({ status: 404, message: "Comment not found" });
     comment.isAccept = !comment.isAccept;
     await comment.save();
 
-    res.status(200).json({ message: "Comment status changed" });
+    res.status(200).json({ message: `Comment ${comment.isAccept ? 'accepted' : 'rejected'}` });
   } catch (err) {
     next(err);
   }
 };
-
 /* Update Comment (Admin)*/
 exports.patch = async (req, res, next) => {
   try {
-    const bodyParsed = updateCommentSchema.safeParse(req.body);
-    if (!bodyParsed.success)
-      return next({
-        status: 422,
-        message: "Invalid data",
-        errors: bodyParsed.error.issues,
-      });
-
     const updated = await commentModel.findByIdAndUpdate(
       req.params.id,
-      { $set: { body: bodyParsed.data.body } },
+      { $set: { body: req.parsed.data.body } },
       { new: true }
     );
 

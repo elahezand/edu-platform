@@ -1,26 +1,54 @@
 const express = require("express");
 const sessionRouter = express.Router();
 const controller = require("../controllers/session");
-const { authAdmin } = require("../middlewares/authMiddleware");
+const { authAdmin, identifyUser } = require("../middlewares/authMiddleware");
 const upload = require("../utils/multer");
 const validateObjectIdParam = require("../middlewares/objectId")
 
+const validate = require("../middlewares/validate")
+const {
+    createSessionSchema,
+    updateSessionSchema,
+} = require("../validators/session");
 
-sessionRouter.get("/", authAdmin, controller.get);
-sessionRouter.get("/:shortName", authAdmin, controller.getSessionCourse);
-sessionRouter.post("/", authAdmin, upload.single("videoUrl"), controller.post);
 
-sessionRouter.get("/:id", authAdmin,
+sessionRouter.get("/",
+    identifyUser,
+    authAdmin,
+    controller.get);
+
+
+sessionRouter.post("/",
+    identifyUser,
+    authAdmin, upload.single("videoUrl"),
+    validate(createSessionSchema),
+    controller.post);
+
+sessionRouter.get("/:id",
+    identifyUser,
+    authAdmin,
     validateObjectIdParam("id"),
     controller.getOne);
 
-sessionRouter.patch("/:id", authAdmin,
+sessionRouter.patch("/:id",
+    identifyUser,
+    authAdmin,
     validateObjectIdParam("id"),
-    upload.single("videoUrl"), controller.patch);
+    upload.single("videoUrl"),
+    validate(updateSessionSchema),
+    controller.patch);
 
-sessionRouter.delete("/:id", authAdmin,
+sessionRouter.delete("/:id",
+    identifyUser,
+    authAdmin,
     validateObjectIdParam("id"),
     controller.remove);
+
+sessionRouter.get("/:shortName",
+    identifyUser,
+    authAdmin,
+    controller.getSessionCourse);
+
 
 module.exports = sessionRouter;
 

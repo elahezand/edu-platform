@@ -1,7 +1,4 @@
 const contactModel = require("../models/contact");
-const {
-  createContactSchema,
-} = require("../validators/contact");
 const { paginate } = require("../utils/helper");
 const sendEmail = require("../utils/sendEmail");
 
@@ -45,16 +42,7 @@ exports.getOne = async (req, res, next) => {
 /*  Create Contact (Public)*/
 exports.post = async (req, res, next) => {
   try {
-    const parsed = createContactSchema.safeParse(req.body);
-    if (!parsed.success)
-      return next({
-        status: 422,
-        message: "Invalid data",
-        errors: parsed.error.flatten().fieldErrors,
-      });
-
-    const newContact = await contactModel.create(parsed.data);
-
+    const newContact = await contactModel.create(req.parsed.data);
     res.status(201).json({
       message: "Contact message sent successfully",
       contact: newContact,

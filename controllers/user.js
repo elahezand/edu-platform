@@ -1,6 +1,6 @@
-const { createUserSchema, updateUserSchema } = require("../validators/user");
 const UserModel = require("../models/user");
 const BanModel = require("../models/ban");
+const mongoose = require("mongoose")
 const { paginate } = require("../utils/helper");
 const { generateToken, generateRefreshToken, hashPassword, verifyPassword } = require("../utils/auth");
 
@@ -27,18 +27,12 @@ exports.get = async (req, res, next) => {
 /* Create User (Admin)*/
 exports.post = async (req, res, next) => {
     try {
-        const parsed = createUserSchema.safeParse(req.body);
-        if (!parsed.success) {
-            return next({ status: 422, message: "Invalid data", errors: parsed.error.issues });
-        }
 
-        const { username, email, password, phone } = parsed.data;
+        const { username, email, password, phone } = req.parsed.data;
 
-        // Check if user is banned
         const isBanUser = await BanModel.findOne({ $or: [{ email }, { phone }] });
         if (isBanUser) return next({ status: 403, message: "User is banned" });
 
-        // Check if user already exists
         const isUserExist = await UserModel.findOne({ $or: [{ phone }, { email }, { username }] });
         if (isUserExist) return next({ status: 409, message: "User already exists" });
 
@@ -77,15 +71,15 @@ exports.post = async (req, res, next) => {
 /* Update User (Admin/User)*/
 exports.put = async (req, res, next) => {
     try {
-        const parsedBody = updateUserSchema.safeParse(req.body);
-        if (!parsedBody.success) return next({ status: 422, message: "Invalid data", errors: parsedBody.error.issues });
+        const { password, newPassword, confirmPassword, ...rest } = req.parsed.data;
 
-        const { password, newPassword, confirmPassword, ...rest } = parsedBody.data;
-        const user = await UserModel.findById(req.params.id
-        );
+        const user = await UserModel.findById(req.params.id);
         if (!user) return next({ status: 404, message: "User not found" });
 
-        // Verify current password if changing password
+        if (req.user._id.toString() !== req.params.id) {
+            return next({ status: 403, message: "Access denied" });
+        }
+
         if (newPassword) {
             if (!password || !verifyPassword(password, user.password)) {
                 return next({ status: 422, message: "Current password is invalid" });
@@ -100,13 +94,11 @@ exports.put = async (req, res, next) => {
             rest.avatar = `/users/avatars/${req.file.filename}`;
         }
 
-        const updatedUser = await UserModel.findByIdAndUpdate(req.params.id
+        const updatedUser = await UserModel.findByIdAndUpdate(
+            req.params.id
             , { $set: rest }, { new: true });
-        const userObj = updatedUser.toObject();
-        delete userObj.password;
-        delete userObj.refreshToken;
 
-        res.status(200).json({ message: "User updated successfully", user: userObj });
+        res.status(200).json({ message: "User updated successfully", user: updatedUser });
     } catch (err) {
         next(err);
     }
@@ -116,7 +108,6 @@ exports.put = async (req, res, next) => {
 exports.remove = async (req, res, next) => {
     try {
         await UserModel.findByIdAndDelete(req.params.id);
-
         res.status(200).json({ message: "User removed successfully" });
     } catch (err) {
         next(err);
@@ -141,13 +132,6 @@ exports.ban = async (req, res, next) => {
                 phone
             });
         }
-        await UserModel.findOneAndDelete({
-            $or: [
-                { _id: userId },
-                { phone: phone }
-            ]
-        });
-
         return res.status(200).json({ message: "User banned successfully" });
     } catch (err) {
         next(err);
@@ -157,8 +141,7 @@ exports.ban = async (req, res, next) => {
 /* Toggle Role (Admin)*/
 exports.toggleRole = async (req, res, next) => {
     try {
-        const user = await UserModel.findById(req.params.id
-        );
+        const user = await UserModel.findById(req.params.id);
         if (!user) return next({ status: 404, message: "User not found" });
 
         user.role = user.role === "USER" ? "ADMIN" : "USER";
