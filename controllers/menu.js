@@ -1,5 +1,4 @@
 const menuModel = require("../models/menu");
-const { updateMenuSchema, createMenuSchema } = require("../validators/menu");
 // Get All Menus// 
 exports.get = async (req, res, next) => {
     try {
@@ -13,7 +12,7 @@ exports.get = async (req, res, next) => {
 
         menus.forEach(menu => {
             const currentItem = map[menu._id];
-            const parentId = menu.parentId;
+            const parentId = menu.parent;
 
             if (parentId && map[parentId]) {
                 map[parentId].children.push(currentItem);
@@ -48,11 +47,7 @@ exports.getOne = async (req, res, next) => {
 // Create Menu// 
 exports.post = async (req, res, next) => {
     try {
-        const parsed = createMenuSchema.safeParse(req.body);
-        if (!parsed.success)
-            return res.status(422).json({ message: parsed.error.issues });
-
-        const newMenu = await menuModel.create(parsed.data);
+        const newMenu = await menuModel.create(req.parsed.data);
         res.status(201).json(newMenu);
     } catch (err) {
         next(err);
@@ -62,13 +57,9 @@ exports.post = async (req, res, next) => {
 //  Update Menu// 
 exports.patch = async (req, res, next) => {
     try {
-        const parsed = updateMenuSchema.safeParse(req.body);
-        if (!parsed.success)
-            return res.status(422).json({ message: parsed.error.issues });
-
         const updatedMenu = await menuModel.findByIdAndUpdate(
             req.params.id,
-            parsed.data,
+            req.parsed.data,
             { new: true }
         );
 

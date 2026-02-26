@@ -1,5 +1,4 @@
 const Ticket = require("../models/ticket");
-const { createTicketSchema, updateTicketSchema } = require("../validators/ticket");
 const { paginate } = require("../utils/helper");
 
 /*  Get All Tickets (Admin)*/
@@ -32,19 +31,19 @@ exports.getMyTickets = async (req, res, next) => {
 /*  Get One Ticket + Responses*/
 exports.getOne = async (req, res, next) => {
   try {
-    const ticket = await Ticket.findById(req.params.id)
-      .populate("user", "name email")
-      .populate("departmentID", "title")
-      .populate("course", "title")
-      .lean();
+    const [ticket] = await Ticket.aggregate([
+      { $match: { _id: new mongoose.Types.ObjectId(req.params.id) } },
+      {
+        $lookup: {
+          from: "tickets",
+          localField: "_id",
+          foreignField: "parent",
+          as: "children"
+        }
+      }
+    ]);
 
     if (!ticket) return next({ status: 404, message: "Ticket not found" });
-
-    const children = await Ticket.find({ parent: ticket._id })
-      .populate("user", "name email")
-      .lean();
-
-    ticket.children = children;
 
     res.status(200).json(ticket);
   } catch (err) {
@@ -55,16 +54,8 @@ exports.getOne = async (req, res, next) => {
 /* Create Ticket (User)*/
 exports.create = async (req, res, next) => {
   try {
-    const parsed = createTicketSchema.safeParse(req.body);
-    if (!parsed.success)
-      return next({
-        status: 422,
-        message: "Invalid data",
-        errors: parsed.error.issues,
-      });
-
     const newTicket = await Ticket.create({
-      ...parsed.data,
+      ...req.parsed.data,
       user: req.user._id,
     });
 
@@ -92,15 +83,14 @@ exports.answer = async (req, res, next) => {
       parent: ticket._id,
       title: `Answer: ${ticket.title}`,
       body,
-      user: req.user._id,        // admin
+      user: req.user._id,
       departmentID: ticket.departmentID,
       course: ticket.course,
       isAnswer: 1,
     });
 
-    // آپدیت تیکت اصلی
     ticket.isAnswer = 1;
-    if (status) ticket.status = status; // optional
+    if (status) ticket.status = status;
     await ticket.save();
 
     res.status(201).json({

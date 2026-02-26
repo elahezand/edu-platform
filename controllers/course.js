@@ -1,7 +1,6 @@
 const courseModel = require("../models/course");
 const categoryModel = require("../models/category");
 const courseUserModel = require("../models/course-user");
-const commentModel = require("../models/comment");
 const {
   createCourseSchema,
   updateCourseSchema,
@@ -104,37 +103,33 @@ exports.getRelated = async (req, res, next) => {
 /*Get One Course*/
 exports.getOne = async (req, res, next) => {
   try {
-    const course = await courseModel.findById(req.params.id)
-      .populate("instructor", "name")
-      .populate("category", "title")
-      .lean();
-
-    if (!course) return next({ status: 404, message: "Course not found" });
-
-    const [courseRegisters, courseComments] = await Promise.all([
-      courseUserModel.countDocuments({ course: course._id }),
-      commentModel.find({ course: course._id }).lean()
+    const [course] = await courseModel.aggregate([
+      { $match: { _id: new mongoose.Types.ObjectId(req.params.id) } },
+      { $lookup: { from: "users", localField: "instructor", foreignField: "_id", as: "instructor" } },
+      { $unwind: "$instructor" },
+      { $lookup: { from: "categories", localField: "category", foreignField: "_id", as: "category" } },
+      { $unwind: "$category" },
+      { $lookup: { from: "courseusers", localField: "_id", foreignField: "course", as: "registers" } },
+      { $lookup: { from: "comments", localField: "_id", foreignField: "course", as: "comments" } },
+      {
+        $addFields: {
+          registersCount: { $size: "$registers" },
+          registeredUserIds: "$registers.user",
+          courseAverageScore: { $cond: [{ $gt: [{ $size: "$comments" }, 0] }, { $round: [{ $avg: "$comments.score" }, 0] }, 5] },
+          isUserRegisteredToThisCourse: userId ? { $in: [new mongoose.Types.ObjectId(userId), "$registeredUserIds"] } : false
+        }
+      },
+      {
+        $project: {
+          registers: 0,
+          comments: 0,
+          registeredUserIds: 0
+        }
+      }
     ]);
 
-    const totalScore = courseComments.reduce((acc, curr) => acc + (curr.score || 0), 0);
-    const avgScore = courseComments.length > 0 ? Math.round(totalScore / courseComments.length) : 5;
-
-    let isUserRegistered = false;
-    if (req.user) {
-      isUserRegistered = !!(await courseUserModel.findOne({
-        user: req.user._id,
-        course: course._id,
-      }));
-    }
-
-    res.status(200).json({
-      ...course,
-      instructor: course.instructor?.name,
-      category: course.category?.title,
-      registers: courseRegisters,
-      courseAverageScore: avgScore,
-      isUserRegisteredToThisCourse: isUserRegistered,
-    });
+    if (!course) return next({ status: 404, message: "Course not found" });
+    res.status(200).json(course);
   } catch (err) {
     next(err);
   }
@@ -220,8 +215,10 @@ exports.remove = async (req, res, next) => {
 /* Register User To Course*/
 exports.register = async (req, res, next) => {
   try {
-    const { price } = req.body;
-
+    const mainCourse = await courseModel.findById(req.params.id)
+if (!mainCourse) {
+      return res.status(400).json({ message: "NOT FOUND." });
+    }
     const isUserAlreadyRegistered = await courseUserModel.findOne({
       user: req.user._id,
       course: req.params.id
@@ -230,11 +227,11 @@ exports.register = async (req, res, next) => {
     if (isUserAlreadyRegistered) {
       return res.status(400).json({ message: "You are already registered." });
     }
-
+   
     await courseUserModel.create({
       user: req.user._id,
-      course: String(id),
-      price: Number(price) || 0,
+      course: String(req.params.id),
+      price: mainCourse.price,
     });
 
     return res.status(201).json({ message: "Registered successfully." });

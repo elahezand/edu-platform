@@ -1,9 +1,5 @@
 const departmentModel = require("../models/department");
 
-const {
-    createDepartmentSchema,
-    updateDepartmentSchema,
-} = require("../validators/department");
 
 /* Get All (with parent)*/
 exports.get = async (req, res, next) => {
@@ -47,13 +43,10 @@ exports.getOne = async (req, res, next) => {
 /* Create (supports parent)*/
 exports.post = async (req, res, next) => {
     try {
-        const parsed = createDepartmentSchema.safeParse(req.body);
-        if (!parsed.success)
-            return next({ status: 422, message: parsed.error.message });
-
+    
         const department = await departmentModel.create({
-            title: parsed.data.title,
-            parent: parsed.data.parent || null,
+            title: req.parsed.data.title,
+            parent: req.parsed.data.parent || null,
         });
 
         res.status(201).json(department);
@@ -65,19 +58,11 @@ exports.post = async (req, res, next) => {
 /* Update (title + parent)*/
 exports.patch = async (req, res, next) => {
     try {
-        const parsed = updateDepartmentSchema.safeParse({
-            id: req.params.id,
-            ...req.body,
-        });
-
-        if (!parsed.success)
-            return next({ status: 422, message: parsed.error.message });
-
         const department = await departmentModel.findByIdAndUpdate(
             req.params.id,
             {
-                title: parsed.data.title,
-                parent: parsed.data.parent ?? null,
+                title: req.parsed.data.title,
+                parent: req.parsed.data.parent ?? null,
             },
             { new: true }
         );

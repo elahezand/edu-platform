@@ -1,25 +1,37 @@
 const express = require("express");
 const notificationRouter = express.Router();
 const controller = require("../controllers/notification");
-const { authAdmin } = require("../middlewares/authMiddleware");
+const { authAdmin, identifyUser } = require("../middlewares/authMiddleware");
 const validateObjectIdParam = require("../middlewares/objectId")
 
-// Get all notifications (admin)
-notificationRouter.get("/", authAdmin, controller.getAll);
-// Create a new notification
-notificationRouter.post("/", authAdmin, controller.post);
+const validate = require("../middlewares/validate")
+const { createNotificationSchema } = require("../validators/notification");
 
-notificationRouter.get("/:id", authAdmin,
+notificationRouter.get("/",
+    identifyUser,
+    authAdmin,
+    controller.getAll);
+
+notificationRouter.post("/", identifyUser,
+    authAdmin,
+    validate(createNotificationSchema),
+    controller.post);
+
+notificationRouter.get("/:id",
+    identifyUser,
+    authAdmin,
     validateObjectIdParam("id"),
     controller.get);
 
-// Update a notification (optional)
-notificationRouter.put("/:id", authAdmin,
+notificationRouter.put("/:id",
+    identifyUser,
+    authAdmin,
     validateObjectIdParam("id"),
     controller.seen);
 
-// Delete a notification
-notificationRouter.delete("/:id", authAdmin,
+notificationRouter.delete("/:id",
+    identifyUser,
+    authAdmin,
     validateObjectIdParam("id"),
     controller.remove);
 

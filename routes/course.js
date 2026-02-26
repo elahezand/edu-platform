@@ -2,9 +2,8 @@ const express = require("express");
 const courseRouter = express.Router();
 const controller = require("../controllers/course");
 const upload = require("../utils/multer");
-const { authAdmin, authUser } = require("../middlewares/authMiddleware");
+const { authAdmin, identifyUser } = require("../middlewares/authMiddleware");
 const validateObjectIdParam = require("../middlewares/objectId")
-
 
 // Public Routes
 courseRouter.get("/", controller.getAll);
@@ -17,19 +16,23 @@ courseRouter.get("/:id",
 
 
 // User Routes
-courseRouter.post("/:id/register", authUser,
+courseRouter.post("/:id/register"
+  , identifyUser,
   validateObjectIdParam("id"),
   controller.register);
 
 // Admin Routes
 courseRouter.post(
   "/",
+  identifyUser,
+  authAdmin,
   upload.single("coverImage"),
   controller.post
 );
 
 courseRouter.patch(
   "/:id",
+  identifyUser,
   authAdmin,
   validateObjectIdParam("id"),
   upload.single("coverImage"),
@@ -37,6 +40,8 @@ courseRouter.patch(
 );
 
 courseRouter.delete("/:id",
+  identifyUser,
+  authAdmin,
   validateObjectIdParam("id"),
   controller.remove);
 

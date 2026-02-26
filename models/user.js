@@ -56,9 +56,9 @@ const schema = new mongoose.Schema(
         toObject: { virtuals: true },
         toJSON: {
             virtuals: true,
-            transform(doc, ret) {
-                ret.id = ret._id.toString();
-                delete ret._id;
+            transform: (doc, ret) => {
+                delete ret.password;
+                delete ret.refreshToken;
                 delete ret.__v;
                 return ret;
             },

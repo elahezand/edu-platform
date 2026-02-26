@@ -1,22 +1,37 @@
 const express = require("express");
 const contactRouter = express.Router();
 const controller = require("../controllers/contact");
-const { authAdmin } = require("../middlewares/authMiddleware");
+const { authAdmin, identifyUser } = require("../middlewares/authMiddleware");
 const validateObjectIdParam = require("../middlewares/objectId")
 
+const {
+    createContactSchema,
+} = require("../validators/contact");
 
-contactRouter.get("/", authAdmin, controller.get);
-contactRouter.post("/", controller.post);
+const validate = require("../middlewares/validate")
 
-contactRouter.get("/:id", authAdmin,
+
+contactRouter.get("/",
+    identifyUser,
+    authAdmin, controller.get);
+
+contactRouter.post("/",
+    validate(createContactSchema),
+    controller.post);
+
+contactRouter.get("/:id",
+    identifyUser,
+    authAdmin,
     validateObjectIdParam("id"),
     controller.getOne);
 
 
-contactRouter.delete("/:id", authAdmin,
+contactRouter.delete("/:id",
+    identifyUser,
+    authAdmin,
     validateObjectIdParam("id"),
     controller.remove);
-    
+
 contactRouter.post("/:id/answer",
     validateObjectIdParam("id"),
     controller.answer);

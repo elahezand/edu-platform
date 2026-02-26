@@ -2,7 +2,6 @@ const courseModel = require("../models/course");
 const articleModel = require("../models/article");
 const sessionModel = require("../models/session");
 
-
 exports.search = async (req, res, next) => {
   try {
     const q = String(req.query.q || "").trim();

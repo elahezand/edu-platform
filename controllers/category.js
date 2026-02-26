@@ -1,9 +1,4 @@
 const categoryModel = require("../models/category");
-const {
-  createCategorySchema,
-  updateCategorySchema,
-} = require("../validators/category");
-
 const { paginate } = require("../utils/helper");
 
 /*  Get Categories*/
@@ -31,20 +26,11 @@ exports.get = async (req, res, next) => {
 /* Create Category*/
 exports.post = async (req, res, next) => {
   try {
-
-    const parsed = createCategorySchema.safeParse(req.body);
-    if (!parsed.success)
-      return next({
-        status: 422,
-        message: "Invalid data",
-        errors: parsed.error.flatten().fieldErrors,
-      });
-
-    const exists = await categoryModel.findOne({ name: parsed.data.name });
+    const exists = await categoryModel.findOne({ name: req.parsed.data.name });
     if (exists)
       return next({ status: 409, message: "Category already exists" });
 
-    const category = await categoryModel.create(parsed.data);
+    const category = await categoryModel.create(req.parsed.data);
 
     res.status(201).json({
       message: "Category created successfully",
@@ -59,17 +45,10 @@ exports.post = async (req, res, next) => {
 /* Update Category*/
 exports.patch = async (req, res, next) => {
   try {
-    const bodyParsed = updateCategorySchema.safeParse(req.body);
-    if (!bodyParsed.success)
-      return next({
-        status: 422,
-        message: "Invalid data",
-        errors: bodyParsed.error.flatten().fieldErrors,
-      });
 
-    if (bodyParsed.data.name) {
+    if (req.parsed.data.name) {
       const exists = await categoryModel.findOne({
-        name: bodyParsed.data.name,
+        name: req.parsed.data.name,
         _id: { $ne: req.params.id }
       });
       if (exists)
@@ -78,7 +57,7 @@ exports.patch = async (req, res, next) => {
 
     const updated = await categoryModel.findByIdAndUpdate(
       req.params.id,
-      { $set: bodyParsed.data },
+      { $set: req.parsed.data },
       { new: true }
     );
 

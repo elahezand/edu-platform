@@ -70,7 +70,9 @@ apiRouter.use("/orders",orderRouter)
 app.use("/api", apiRouter);
 
 app.use((req, res, next) => {
-    res.status(404).json({ message: "Route not found!" });
+  const err = new Error("Route not found!");
+  err.status = 404;
+  next(err);
 });
 
 app.use(errorHandler);
